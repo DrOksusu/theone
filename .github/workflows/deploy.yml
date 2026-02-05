@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "${{ secrets.AWS_KEY }}" > aws_key.pem
           chmod 400 aws_key.pem
-          ssh -o StrictHostKeyChecking=no -i aws_key.pem bitnami@${{ secrets.AWS_HOST_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i aws_key.pem ubuntu@${{ secrets.AWS_HOST_IP }} << 'EOF'
             echo "Deploying Frontend..."
 
             docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
@@ -94,7 +94,7 @@ jobs:
         run: |
           echo "${{ secrets.AWS_KEY }}" > aws_key.pem
           chmod 400 aws_key.pem
-          ssh -o StrictHostKeyChecking=no -i aws_key.pem bitnami@${{ secrets.AWS_HOST_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i aws_key.pem ubuntu@${{ secrets.AWS_HOST_IP }} << 'EOF'
             echo "Deploying Backend..."
 
             docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
