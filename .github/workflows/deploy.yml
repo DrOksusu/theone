@@ -94,7 +94,7 @@ jobs:
         run: |
           echo "${{ secrets.AWS_KEY }}" > aws_key.pem
           chmod 400 aws_key.pem
-          ssh -o StrictHostKeyChecking=no -i aws_key.pem ubuntu@${{ secrets.AWS_HOST_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i aws_key.pem ubuntu@${{ secrets.AWS_HOST_IP }} << EOF
             echo "Deploying Backend..."
 
             docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
@@ -106,7 +106,9 @@ jobs:
             docker run -d \
               --name theonebook-backend \
               --restart=always \
-              --env-file .env \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e PORT=3000 \
               -p 3000:3000 \
               ${{ secrets.DOCKER_USERNAME }}/theonebook-backend:latest
 
