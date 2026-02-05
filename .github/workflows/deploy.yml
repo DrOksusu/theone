@@ -1,0 +1,117 @@
+name: Deploy theonebook Monorepo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 변경된 파일 감지
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+  # Frontend 배포
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push Frontend Docker image
+        working-directory: ./frontend
+        run: |
+          docker build --no-cache --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/theonebook-frontend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/theonebook-frontend:latest
+
+      - name: Deploy Frontend to AWS EC2
+        run: |
+          echo "${{ secrets.AWS_KEY }}" > aws_key.pem
+          chmod 400 aws_key.pem
+          ssh -o StrictHostKeyChecking=no -i aws_key.pem bitnami@${{ secrets.AWS_HOST_IP }} << 'EOF'
+            echo "Deploying Frontend..."
+
+            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+            docker pull ${{ secrets.DOCKER_USERNAME }}/theonebook-frontend:latest
+
+            docker stop theonebook-frontend || true
+            docker rm theonebook-frontend || true
+
+            docker run -d \
+              --name theonebook-frontend \
+              --restart=always \
+              -v /etc/letsencrypt:/etc/letsencrypt:ro \
+              -p 9000:80 \
+              ${{ secrets.DOCKER_USERNAME }}/theonebook-frontend:latest
+
+            echo "Frontend deployed successfully!"
+          EOF
+
+      - name: Clean up
+        run: rm -rf aws_key.pem
+
+  # Backend 배포
+  deploy-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push Backend Docker image
+        working-directory: ./backend
+        run: |
+          docker build --no-cache --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/theonebook-backend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/theonebook-backend:latest
+
+      - name: Deploy Backend to AWS EC2
+        run: |
+          echo "${{ secrets.AWS_KEY }}" > aws_key.pem
+          chmod 400 aws_key.pem
+          ssh -o StrictHostKeyChecking=no -i aws_key.pem bitnami@${{ secrets.AWS_HOST_IP }} << 'EOF'
+            echo "Deploying Backend..."
+
+            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+            docker pull ${{ secrets.DOCKER_USERNAME }}/theonebook-backend:latest
+
+            docker stop theonebook-backend || true
+            docker rm theonebook-backend || true
+
+            docker run -d \
+              --name theonebook-backend \
+              --restart=always \
+              --env-file .env \
+              -p 3000:3000 \
+              ${{ secrets.DOCKER_USERNAME }}/theonebook-backend:latest
+
+            echo "Backend deployed successfully!"
+          EOF
+
+      - name: Clean up
+        run: rm -rf aws_key.pem

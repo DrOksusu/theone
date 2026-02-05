@@ -1,0 +1,26 @@
+{
+    "family": "theonebook-nginx-task",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::827899252497:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+      {
+        "name": "theonebook-nginx",
+        "image": "827899252497.dkr.ecr.ap-northeast-2.amazonaws.com/theonebook-frontend:latest",
+        "portMappings": [
+          {
+            "containerPort": 80,
+            "protocol": "tcp"
+          },
+          {
+            "containerPort": 443,
+            "protocol": "tcp"
+          }
+        ],
+        "essential": true
+      }
+    ]
+  }
+  

@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pages     Page[]   // ✅ 페이지 연결
+}
+
+model Chapter {
+  id        Int      @id @default(autoincrement())
+  title     String
+  order     Int      // ✅ 챕터 순서
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pages     Page[]   // ✅ 페이지 연결
+}
+
+model Page {
+  id         Int      @id @default(autoincrement())
+  title      String
+  imageUrl   String?  // 이미지 업로드된 URL
+  content    String   @db.LongText  // 본문
+  memo       String?  @db.Text      // 메모
+
+  chapterId  Int
+  chapter    Chapter  @relation(fields: [chapterId], references: [id])
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+
+  order      Int      // 챕터 안에서의 순서 (1부터 시작)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

@@ -1,0 +1,29 @@
+.page-viewer {
+    max-width: 600px;
+    margin: auto;
+    padding: 1rem;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  
+  select {
+    flex: 1;
+    padding: 8px;
+  }
+  
+  .page-details {
+    border-top: 1px solid #ccc;
+    padding-top: 1rem;
+  }
+  
+  .page-image {
+    max-width: 100%;
+    margin-top: 1rem;
+    border: 1px solid #ccc;
+  }
+
+  

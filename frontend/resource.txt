@@ -1,0 +1,17 @@
+보안그룹 ID : sg-0fce6e7d6ba243c84
+VPC ID : vpc-02b90af4c674ae512
+
+서브넷 ID 를 포함
+aws ecs create-service \
+  --cluster theonebook-cluster \
+  --service-name theonebook-service \
+  --task-definition theonebook-nginx-task \
+  --desired-count 1 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-0589e7b812756998a,subnet-0649392862fba5fab],securityGroups=[sg-xxxxxxxx],assignPublicIp=ENABLED}" \
+  --region ap-northeast-2
+
+  Fargate 서비스 생성 명령어 : aws ecs create-service --cluster theone-cluster --service-name theonebook-service --task-definition theonebook-nginx-task --desired-count 1 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=[subnet-0589e7b812756998a,subnet-0649392862fba5fab],securityGroups=[sg-0fce6e7d6ba243c84],assignPublicIp=ENABLED}" --region ap-northeast-2
+
+
+
