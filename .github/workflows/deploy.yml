@@ -62,8 +62,8 @@ jobs:
             docker run -d \
               --name theonebook-frontend \
               --restart=always \
-              -v /etc/letsencrypt:/etc/letsencrypt:ro \
-              -p 9000:80 \
+              -e NEXT_PUBLIC_API_URL=http://localhost:3000 \
+              -p 9000:9000 \
               ${{ secrets.DOCKER_USERNAME }}/theonebook-frontend:latest
 
             echo "Frontend deployed successfully!"

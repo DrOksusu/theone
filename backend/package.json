@@ -4,8 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/server.js",
-    "start": "node ./src/server.js"    
+    "dev": "cross-env NODE_ENV=development nodemon ./src/server.js",
+    "dev:prod": "cross-env NODE_ENV=production nodemon ./src/server.js",
+    "start": "node ./src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
     "react-router-dom": "^7.5.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.9"
   }
 }

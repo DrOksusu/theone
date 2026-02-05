@@ -3,7 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
-require("dotenv").config();
+const path = require("path");
+
+// 환경에 따라 .env 파일 선택
+const envFile = process.env.NODE_ENV === "production" ? ".env" : ".env.local";
+const envPath = path.resolve(__dirname, "..", envFile);
+console.log(`📁 NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`📁 Loading env from: ${envPath}`);
+require("dotenv").config({ path: envPath, override: true });
 
 const app = express();
 const prisma = new PrismaClient();

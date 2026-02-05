@@ -1,34 +1,30 @@
-// ✅ 페이지 순서 입력 없이 자동 처리되는 PageViewer
-import React, { useEffect, useState } from "react";
-import "../PageViewer.css";
+'use client';
 
-import axios from "../axios";
+import { useEffect, useState } from 'react';
+import axios from '@/lib/axios';
 
-const BASE_URL = import.meta.env.VITE_SERVER_URL;
-console.log("BASE_URL:", BASE_URL);
-
-function PageViewer({ token, userId }) {
+export default function PageViewer({ token, userId }) {
   const [chapters, setChapters] = useState([]);
   const [pages, setPages] = useState([]);
-  const [selectedChapterId, setSelectedChapterId] = useState("");
-  const [selectedPageId, setSelectedPageId] = useState("");
+  const [selectedChapterId, setSelectedChapterId] = useState('');
+  const [selectedPageId, setSelectedPageId] = useState('');
   const [form, setForm] = useState({
-    title: "",
-    content: "",
-    memo: "",
-    chapterId: "",
+    title: '',
+    content: '',
+    memo: '',
+    chapterId: '',
     image: null,
-    imageUrl: "",
+    imageUrl: '',
   });
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
-    axios.get("/api/chapters").then((res) => {
+    axios.get('/api/chapters').then((res) => {
       if (Array.isArray(res.data)) {
         setChapters(res.data);
       } else {
-        console.error("📛 chapters 응답이 배열이 아님:", res.data);
-        setChapters([]); // fallback
+        console.error('📛 chapters 응답이 배열이 아님:', res.data);
+        setChapters([]);
       }
     });
   }, []);
@@ -42,17 +38,17 @@ function PageViewer({ token, userId }) {
         .then((res) => setPages(res.data));
     } else {
       setPages([]);
-      setSelectedPageId("");
+      setSelectedPageId('');
       resetForm();
     }
-  }, [selectedChapterId]);
+  }, [selectedChapterId, token]);
 
   useEffect(() => {
     if (!selectedPageId) {
       resetForm();
       return;
     }
-    if (selectedPageId.startsWith("_new_")) return;
+    if (selectedPageId.startsWith('_new_')) return;
 
     axios
       .get(`/api/pages/${selectedPageId}`, {
@@ -63,28 +59,25 @@ function PageViewer({ token, userId }) {
         setForm({
           title: page.title,
           content: page.content,
-          memo: page.memo || "",
+          memo: page.memo || '',
           chapterId: selectedChapterId,
           image: null,
-          imageUrl: page.imageUrl || "",
+          imageUrl: page.imageUrl || '',
         });
-        const fullUrl = page.imageUrl?.startsWith("http")
-          ? page.imageUrl
-          : `${BASE_URL}${page.imageUrl}`;
-        setPreviewUrl(fullUrl);
+        setPreviewUrl(page.imageUrl || '');
       });
-  }, [selectedPageId]);
+  }, [selectedPageId, selectedChapterId, token]);
 
   const resetForm = () => {
     setForm({
-      title: "",
-      content: "",
-      memo: "",
+      title: '',
+      content: '',
+      memo: '',
       chapterId: selectedChapterId,
       image: null,
-      imageUrl: "",
+      imageUrl: '',
     });
-    setPreviewUrl("");
+    setPreviewUrl('');
   };
 
   const handleChange = (e) => {
@@ -101,14 +94,14 @@ function PageViewer({ token, userId }) {
       reader.readAsDataURL(file);
     } else {
       setForm((prev) => ({ ...prev, image: null }));
-      setPreviewUrl(form.imageUrl ? `${BASE_URL}${form.imageUrl}` : "");
+      setPreviewUrl(form.imageUrl || '');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.chapterId) {
-      alert("필수 항목을 입력해주세요!");
+      alert('필수 항목을 입력해주세요!');
       return;
     }
 
@@ -116,17 +109,17 @@ function PageViewer({ token, userId }) {
       let imageUrl = form.imageUrl;
       if (form.image) {
         const imageForm = new FormData();
-        imageForm.append("file", form.image);
-        const imageRes = await axios.post("/api/upload", imageForm, {
+        imageForm.append('file', form.image);
+        const imageRes = await axios.post('/api/upload', imageForm, {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
           },
         });
         imageUrl = imageRes.data.url;
       }
 
-      const pageList = await axios.get("/api/pages", {
+      const pageList = await axios.get('/api/pages', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -136,8 +129,8 @@ function PageViewer({ token, userId }) {
 
       const payload = {
         title: form.title,
-        content: form.content || "",
-        memo: form.memo || "",
+        content: form.content || '',
+        memo: form.memo || '',
         imageUrl,
         chapterId: parseInt(form.chapterId),
         userId: parseInt(userId),
@@ -153,20 +146,20 @@ function PageViewer({ token, userId }) {
           await axios.put(`/api/pages/${existingPage.id}`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          alert("✅ 기존 페이지를 성공적으로 수정했습니다!");
+          alert('✅ 기존 페이지를 성공적으로 수정했습니다!');
         } else {
-          alert("❗ 같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요");
+          alert('❗ 같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
           return;
         }
       } else {
-        await axios.post("/api/pages", payload, {
+        await axios.post('/api/pages', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("✅ 새 페이지를 성공적으로 생성했습니다!");
+        alert('✅ 새 페이지를 성공적으로 생성했습니다!');
       }
     } catch (error) {
-      console.error("❌ 저장 중 오류:", error);
-      alert("저장 중 문제가 발생했습니다!");
+      console.error('❌ 저장 중 오류:', error);
+      alert('저장 중 문제가 발생했습니다!');
     }
   };
 
@@ -195,10 +188,10 @@ function PageViewer({ token, userId }) {
           value={selectedPageId}
           onChange={(e) => {
             const value = e.target.value;
-            if (value === "add_new") {
-              const newTitle = prompt("새로운 단어(타이틀)를 입력해주세요:");
-              if (!newTitle || newTitle.trim() === "") {
-                alert("❗ 단어 제목을 입력해주세요!");
+            if (value === 'add_new') {
+              const newTitle = prompt('새로운 단어(타이틀)를 입력해주세요:');
+              if (!newTitle || newTitle.trim() === '') {
+                alert('❗ 단어 제목을 입력해주세요!');
                 return;
               }
               const trimmedTitle = newTitle.trim();
@@ -258,5 +251,3 @@ function PageViewer({ token, userId }) {
     </form>
   );
 }
-
-export default PageViewer;
