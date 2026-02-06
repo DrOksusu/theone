@@ -61,3 +61,90 @@ button[type="submit"]:disabled {
 button[type="submit"]:hover:not(:disabled) {
   background-color: #2563eb;
 }
+
+/* 로그인 스타일 */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.login-form {
+  background: #f9fafb;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 320px;
+}
+
+.login-form h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 10px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background-color: #2563eb;
+}
+
+.login-form button:disabled {
+  background-color: #9ca3af;
+}
+
+.login-form .hint {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.login-form .error-message {
+  color: #ef4444;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* 사용자 정보 */
+.user-info {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  margin-bottom: 1rem;
+}
+
+.logout-btn {
+  padding: 5px 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}

@@ -17,8 +17,10 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 // 미들웨어
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ["http://localhost:5173", "http://54.180.188.8:9000"], // 프론트 주소
+  origin: ["http://localhost:5173", "http://54.180.188.8:9000", "https://theonebook.me"],
   credentials: true
 }));
 
