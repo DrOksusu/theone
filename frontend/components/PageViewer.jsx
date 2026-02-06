@@ -200,11 +200,15 @@ export default function PageViewer({ token, userId }) {
                 ...prev,
                 { id: newId, title: trimmedTitle, order: 0 },
               ]);
-              setForm((prev) => ({
-                ...prev,
+              setForm({
                 title: trimmedTitle,
+                content: '',
+                memo: '',
                 chapterId: selectedChapterId,
-              }));
+                image: null,
+                imageUrl: '',
+              });
+              setPreviewUrl('');
               setSelectedPageId(newId);
             } else {
               setSelectedPageId(value);
