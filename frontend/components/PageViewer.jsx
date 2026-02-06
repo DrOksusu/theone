@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
 
 export default function PageViewer({ token, userId }) {
@@ -17,6 +17,8 @@ export default function PageViewer({ token, userId }) {
     imageUrl: '',
   });
   const [previewUrl, setPreviewUrl] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     axios.get('/api/chapters').then((res) => {
@@ -85,16 +87,41 @@ export default function PageViewer({ token, userId }) {
     setForm({ ...form, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
       setForm((prev) => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => setPreviewUrl(reader.result);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFile(file);
     } else {
       setForm((prev) => ({ ...prev, image: null }));
       setPreviewUrl(form.imageUrl || '');
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFile(file);
     }
   };
 
@@ -209,6 +236,9 @@ export default function PageViewer({ token, userId }) {
                 imageUrl: '',
               });
               setPreviewUrl('');
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
               setSelectedPageId(newId);
             } else {
               setSelectedPageId(value);
@@ -225,13 +255,42 @@ export default function PageViewer({ token, userId }) {
         </select>
       </div>
 
-      <input type="file" onChange={handleFileChange} />
-
-      {previewUrl && (
-        <div className="image-preview">
-          <img src={previewUrl} alt="미리보기" />
-        </div>
-      )}
+      <div
+        className={`dropzone ${isDragging ? 'dragging' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+        {previewUrl ? (
+          <div className="image-preview">
+            <img src={previewUrl} alt="미리보기" />
+            <button
+              type="button"
+              className="remove-image"
+              onClick={(e) => {
+                e.stopPropagation();
+                setForm((prev) => ({ ...prev, image: null, imageUrl: '' }));
+                setPreviewUrl('');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+            >
+              ✕ 이미지 삭제
+            </button>
+          </div>
+        ) : (
+          <div className="dropzone-text">
+            <span>📷 이미지를 드래그하거나 클릭하여 선택</span>
+          </div>
+        )}
+      </div>
 
       <textarea
         name="content"
