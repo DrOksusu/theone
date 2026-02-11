@@ -94,13 +94,25 @@ export default function PageViewer({ token, userId }) {
     setForm({ ...form, [name]: value });
   };
 
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
   const handleFile = (file) => {
-    if (file && file.type.startsWith('image/')) {
-      setForm((prev) => ({ ...prev, image: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewUrl(reader.result);
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('❌ 이미지 파일만 업로드 가능합니다.');
+      return;
     }
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`❌ 파일 용량이 너무 큽니다.\n최대 10MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, image: file }));
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewUrl(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const handleFileChange = (e) => {
@@ -314,6 +326,7 @@ export default function PageViewer({ token, userId }) {
         ) : (
           <div className="dropzone-text">
             <span>📷 이미지를 드래그하거나 클릭하여 선택</span>
+            <span className="file-limit">(최대 20MB)</span>
           </div>
         )}
       </div>

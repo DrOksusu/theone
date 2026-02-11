@@ -16,7 +16,7 @@ const s3Client = new S3Client({
 // 메모리 스토리지 사용 (S3로 직접 업로드)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB 제한
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB 제한
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());

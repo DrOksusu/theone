@@ -199,6 +199,14 @@ button[type="submit"]:hover:not(:disabled) {
 .dropzone-text {
   color: #666;
   font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-limit {
+  font-size: 0.8rem;
+  color: #9ca3af;
 }
 
 .dropzone .image-preview {
