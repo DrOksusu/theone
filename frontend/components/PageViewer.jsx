@@ -192,17 +192,22 @@ export default function PageViewer({ token, userId }) {
           return;
         }
       } else {
+        console.log('📤 새 페이지 생성 요청...');
         const newPageRes = await axios.post('/api/pages', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('✅ 새 페이지 생성 완료:', newPageRes.data);
         alert('✅ 새 페이지를 성공적으로 생성했습니다!');
 
         // 저장 성공 후 페이지 목록 갱신
+        console.log('🔄 페이지 목록 갱신 중...');
         const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('📋 갱신된 페이지 목록:', pagesRes.data);
         setPages(pagesRes.data);
         setSelectedPageId(newPageRes.data.id.toString());
+        console.log('✅ 목록 갱신 완료');
       }
     } catch (error) {
       console.error('❌ 저장 중 오류:', error);
