@@ -181,6 +181,12 @@ export default function PageViewer({ token, userId }) {
             headers: { Authorization: `Bearer ${token}` },
           });
           alert('✅ 기존 페이지를 성공적으로 수정했습니다!');
+
+          // 수정 후 페이지 목록 갱신
+          const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setPages(pagesRes.data);
         } else {
           alert('❗ 같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
           return;
