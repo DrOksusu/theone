@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/* 네비게이션 */
+.nav-menu {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  margin-bottom: 1rem;
+}
+
+.nav-link {
+  color: #3b82f6;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: #e0f0ff;
+  color: #2563eb;
+}
+
 .page-form {
   max-width: 600px;
   margin: auto;

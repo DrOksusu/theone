@@ -13,11 +13,9 @@ export default function RootLayout({ children }) {
         <div className="App">
           <h1 className="text-xl font-bold text-center mt-4">📘 The One</h1>
 
-          <nav className="text-center my-4">
-            <div style={{ display: 'inline-flex', gap: '1.5rem' }}>
-              <Link href="/total">🔍챕터 및 단어 조회</Link>
-              <Link href="/">📝단어 추가 및 수정(삭제)</Link>
-            </div>
+          <nav className="nav-menu">
+            <Link href="/total" className="nav-link">🔍챕터 및 단어 조회</Link>
+            <Link href="/" className="nav-link">📝단어 추가 및 수정(삭제)</Link>
           </nav>
 
           {children}

@@ -52,21 +52,28 @@ export default function PageViewer({ token, userId }) {
     }
     if (selectedPageId.startsWith('_new_')) return;
 
+    console.log('📡 페이지 조회 요청:', selectedPageId);
+
     axios
       .get(`/api/pages/${selectedPageId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       .then((res) => {
+        console.log('✅ 페이지 조회 성공:', res.data);
         const page = res.data;
         setForm({
           title: page.title,
-          content: page.content,
+          content: page.content || '',
           memo: page.memo || '',
           chapterId: selectedChapterId,
           image: null,
           imageUrl: page.imageUrl || '',
         });
         setPreviewUrl(page.imageUrl || '');
+      })
+      .catch((err) => {
+        console.error('❌ 페이지 조회 실패:', err);
+        alert('페이지 조회 중 오류가 발생했습니다.');
       });
   }, [selectedPageId, selectedChapterId, token]);
 
@@ -179,10 +186,17 @@ export default function PageViewer({ token, userId }) {
           return;
         }
       } else {
-        await axios.post('/api/pages', payload, {
+        const newPageRes = await axios.post('/api/pages', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert('✅ 새 페이지를 성공적으로 생성했습니다!');
+
+        // 저장 성공 후 페이지 목록 갱신
+        const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPages(pagesRes.data);
+        setSelectedPageId(newPageRes.data.id.toString());
       }
     } catch (error) {
       console.error('❌ 저장 중 오류:', error);
@@ -241,6 +255,7 @@ export default function PageViewer({ token, userId }) {
               }
               setSelectedPageId(newId);
             } else {
+              console.log('🔄 단어 선택됨:', value);
               setSelectedPageId(value);
             }
           }}
