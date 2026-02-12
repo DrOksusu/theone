@@ -465,9 +465,45 @@ export default function PageViewer({ token, userId }) {
         rows={8}
       />
 
-      <button type="submit" disabled={!form.chapterId || !form.title}>
-        저장하기
-      </button>
+      <div className="button-row">
+        <button type="submit" disabled={!form.chapterId || !form.title}>
+          저장하기
+        </button>
+        <button
+          type="button"
+          className="delete-btn"
+          disabled={!selectedPageId || selectedPageId.startsWith('_new_')}
+          onClick={async () => {
+            if (!selectedPageId || selectedPageId.startsWith('_new_')) return;
+
+            const confirmDelete = window.confirm(
+              `"${form.title}" 단어를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+            );
+
+            if (!confirmDelete) return;
+
+            try {
+              await axios.delete(`/api/pages/${selectedPageId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              alert('✅ 단어가 삭제되었습니다.');
+
+              // 목록 갱신
+              const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              setPages(pagesRes.data);
+              setSelectedPageId('');
+              resetForm();
+            } catch (error) {
+              console.error('❌ 삭제 실패:', error);
+              alert('삭제 중 오류가 발생했습니다.');
+            }
+          }}
+        >
+          삭제하기
+        </button>
+      </div>
     </form>
   );
 }

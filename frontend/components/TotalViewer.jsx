@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
 
-export default function TotalViewer() {
+export default function TotalViewer({ token }) {
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedChapter, setExpandedChapter] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dragOverItem, setDragOverItem] = useState(null);
 
   useEffect(() => {
     fetchChaptersWithPages();
@@ -17,7 +18,6 @@ export default function TotalViewer() {
       const res = await axios.get('/api/chapters');
       const chaptersData = res.data;
 
-      // 각 챕터별로 페이지 가져오기
       const chaptersWithPages = await Promise.all(
         chaptersData.map(async (chapter) => {
           try {
@@ -37,9 +37,122 @@ export default function TotalViewer() {
     }
   };
 
-  const toggleChapter = (chapterId) => {
-    setExpandedChapter(expandedChapter === chapterId ? null : chapterId);
+  const handleDelete = async (pageId, pageTitle) => {
+    const confirmDelete = window.confirm(
+      `"${pageTitle}" 단어를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/pages/${pageId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      alert('✅ 단어가 삭제되었습니다.');
+      fetchChaptersWithPages();
+    } catch (error) {
+      console.error('❌ 삭제 실패:', error);
+      alert('삭제 중 오류가 발생했습니다.');
+    }
   };
+
+  const handleDragStart = (e, page, chapterId) => {
+    setDraggedItem({ page, chapterId });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, targetPage, targetChapterId, targetIndex) => {
+    e.preventDefault();
+    if (!draggedItem) return;
+    setDragOverItem({ chapterId: targetChapterId, index: targetIndex });
+  };
+
+  const handleDragLeave = () => {
+    setDragOverItem(null);
+  };
+
+  const handleDrop = async (e, targetChapterId, targetIndex) => {
+    e.preventDefault();
+    if (!draggedItem) return;
+
+    const { page: sourcePage, chapterId: sourceChapterId } = draggedItem;
+
+    // 같은 위치면 무시
+    if (sourceChapterId === targetChapterId) {
+      const chapter = chapters.find((ch) => ch.id === sourceChapterId);
+      const sourceIndex = chapter.pages.findIndex((p) => p.id === sourcePage.id);
+      if (sourceIndex === targetIndex) {
+        setDraggedItem(null);
+        setDragOverItem(null);
+        return;
+      }
+    }
+
+    try {
+      // 로컬 상태 먼저 업데이트 (빠른 UI 반응)
+      const newChapters = chapters.map((ch) => {
+        if (ch.id === sourceChapterId) {
+          return {
+            ...ch,
+            pages: ch.pages.filter((p) => p.id !== sourcePage.id),
+          };
+        }
+        return ch;
+      });
+
+      const updatedChapters = newChapters.map((ch) => {
+        if (ch.id === targetChapterId) {
+          const newPages = [...ch.pages];
+          newPages.splice(targetIndex, 0, { ...sourcePage, chapterId: targetChapterId });
+          return { ...ch, pages: newPages };
+        }
+        return ch;
+      });
+
+      setChapters(updatedChapters);
+
+      // 서버에 순서 업데이트
+      const targetChapter = updatedChapters.find((ch) => ch.id === targetChapterId);
+      await axios.put(`/api/pages/${sourcePage.id}/reorder`, {
+        chapterId: targetChapterId,
+        newOrder: targetIndex + 1,
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      // 해당 챕터의 모든 페이지 순서 업데이트
+      for (let i = 0; i < targetChapter.pages.length; i++) {
+        const page = targetChapter.pages[i];
+        if (page.id !== sourcePage.id) {
+          await axios.put(`/api/pages/${page.id}/reorder`, {
+            chapterId: targetChapterId,
+            newOrder: i + 1,
+          }, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ 순서 변경 실패:', error);
+      alert('순서 변경 중 오류가 발생했습니다.');
+      fetchChaptersWithPages();
+    }
+
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  // 전체 단어 수 계산
+  const totalWords = chapters.reduce((sum, ch) => sum + (ch.pages?.length || 0), 0);
+
+  // 가장 많은 단어를 가진 챕터의 단어 수 (행 개수 결정)
+  const maxWords = Math.max(...chapters.map((ch) => ch.pages?.length || 0), 0);
 
   if (loading) {
     return <div className="text-center mt-10">로딩 중...</div>;
@@ -48,46 +161,61 @@ export default function TotalViewer() {
   return (
     <div className="total-viewer">
       <h2>📘 챕터 및 단어 한눈에 보기</h2>
+      <p className="total-summary">총 {chapters.length}개 챕터, {totalWords}개 단어</p>
 
-      <div className="chapters-list">
-        {chapters.map((chapter) => (
-          <div key={chapter.id} className="chapter-item">
-            <div
-              className="chapter-header"
-              onClick={() => toggleChapter(chapter.id)}
-            >
-              <span className="chapter-toggle">
-                {expandedChapter === chapter.id ? '▼' : '▶'}
-              </span>
-              <span className="chapter-title">
-                {chapter.order}. {chapter.title}
-              </span>
-              <span className="chapter-count">
-                ({chapter.pages?.length || 0}개 단어)
-              </span>
-            </div>
-
-            {expandedChapter === chapter.id && (
-              <div className="pages-list">
-                {chapter.pages?.length > 0 ? (
-                  chapter.pages.map((page) => (
-                    <div key={page.id} className="page-item">
-                      <div className="page-title">📄 {page.title}</div>
-                      {page.content && (
-                        <div className="page-content">{page.content}</div>
-                      )}
-                      {page.memo && (
-                        <div className="page-memo">💡 {page.memo}</div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-pages">등록된 단어가 없습니다.</div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="table-container">
+        <table className="pages-table pivot-table">
+          <thead>
+            <tr>
+              <th className="col-no">No.</th>
+              {chapters.map((chapter) => (
+                <th key={chapter.id} className="col-chapter-header">
+                  {chapter.order}. {chapter.title}
+                  <span className="chapter-word-count">({chapter.pages?.length || 0})</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: maxWords + 1 }, (_, rowIndex) => (
+              <tr key={rowIndex}>
+                <td className="col-no">{rowIndex + 1}</td>
+                {chapters.map((chapter) => {
+                  const page = chapter.pages?.[rowIndex];
+                  const isDragOver = dragOverItem?.chapterId === chapter.id && dragOverItem?.index === rowIndex;
+                  return (
+                    <td
+                      key={chapter.id}
+                      className={`col-word ${isDragOver ? 'drag-over' : ''}`}
+                      onDragOver={(e) => handleDragOver(e, page, chapter.id, rowIndex)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, chapter.id, rowIndex)}
+                    >
+                      {page ? (
+                        <div
+                          className={`word-cell draggable ${draggedItem?.page.id === page.id ? 'dragging' : ''}`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, page, chapter.id)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <span className="drag-handle">⋮⋮</span>
+                          <span>{page.title}</span>
+                          <button
+                            className="word-delete-btn"
+                            onClick={() => handleDelete(page.id, page.title)}
+                            title="삭제"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : ''}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

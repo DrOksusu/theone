@@ -240,7 +240,57 @@ router.get("/:id", async (req, res) => {
     console.error("🔴 페이지 상세 조회 실패:", error);
     res.status(500).json({ error: "서버 오류" });
   }
-}); 
+});
 
+// 📗 페이지 순서 변경
+router.put("/:id/reorder", async (req, res) => {
+  const pageId = parseInt(req.params.id);
+  const { chapterId, newOrder } = req.body;
+
+  console.log("📥 [요청 수신] 페이지 순서 변경:", { pageId, chapterId, newOrder });
+
+  try {
+    const updatedPage = await prisma.page.update({
+      where: { id: pageId },
+      data: {
+        chapterId: parseInt(chapterId),
+        order: parseInt(newOrder),
+      },
+    });
+
+    console.log("✅ 페이지 순서 변경 성공:", updatedPage);
+    res.json(updatedPage);
+  } catch (error) {
+    console.error("❌ 페이지 순서 변경 실패:", error);
+    res.status(500).json({ error: "페이지 순서 변경 중 오류가 발생했습니다." });
+  }
+});
+
+// 📕 페이지 삭제
+router.delete("/:id", async (req, res) => {
+  const pageId = parseInt(req.params.id);
+
+  console.log("📥 [요청 수신] 페이지 삭제 요청:", pageId);
+
+  try {
+    const page = await prisma.page.findUnique({
+      where: { id: pageId },
+    });
+
+    if (!page) {
+      return res.status(404).json({ error: "페이지를 찾을 수 없습니다." });
+    }
+
+    await prisma.page.delete({
+      where: { id: pageId },
+    });
+
+    console.log("✅ 페이지 삭제 성공:", pageId);
+    res.json({ message: "페이지가 삭제되었습니다.", deletedId: pageId });
+  } catch (error) {
+    console.error("❌ 페이지 삭제 실패:", error);
+    res.status(500).json({ error: "페이지 삭제 중 오류가 발생했습니다." });
+  }
+});
 
 module.exports = router;

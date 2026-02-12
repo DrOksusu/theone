@@ -86,6 +86,33 @@ button[type="submit"]:hover:not(:disabled) {
   background-color: #2563eb;
 }
 
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row button {
+  flex: 1;
+}
+
+.delete-btn {
+  background-color: #ef4444 !important;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background-color: #dc2626 !important;
+}
+
 /* 로그인 스타일 */
 .login-container {
   display: flex;
@@ -338,4 +365,155 @@ button[type="submit"]:hover:not(:disabled) {
   padding: 1rem;
   color: #9ca3af;
   text-align: center;
+}
+
+/* 전체 보기 요약 */
+.total-summary {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* 테이블 컨테이너 */
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+/* 단어 테이블 스타일 */
+.pages-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.pages-table.full-table {
+  min-width: 700px;
+}
+
+.pages-table.pivot-table {
+  min-width: auto;
+}
+
+.pages-table .col-chapter-header {
+  min-width: 100px;
+  text-align: center;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.pages-table .chapter-word-count {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+.pages-table .col-word {
+  text-align: center;
+  min-width: 100px;
+}
+
+.word-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.word-delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.word-delete-btn:hover {
+  opacity: 1;
+}
+
+/* 드래그 앤 드롭 스타일 */
+.word-cell.draggable {
+  cursor: grab;
+}
+
+.word-cell.draggable:active {
+  cursor: grabbing;
+}
+
+.word-cell.dragging {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-right: 4px;
+  cursor: grab;
+}
+
+.col-word.drag-over {
+  background: #dbeafe;
+  outline: 2px dashed #3b82f6;
+}
+
+.pages-table th,
+.pages-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pages-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.pages-table tbody tr:hover {
+  background: #f0f7ff;
+}
+
+.pages-table .col-no {
+  width: 50px;
+  text-align: center;
+}
+
+.pages-table .col-chapter {
+  width: 120px;
+  font-weight: 500;
+  color: #3b82f6;
+}
+
+.pages-table .col-title {
+  width: 100px;
+  font-weight: 500;
+}
+
+.pages-table .col-content {
+  min-width: 200px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pages-table .col-memo {
+  min-width: 150px;
+  color: #6b7280;
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
