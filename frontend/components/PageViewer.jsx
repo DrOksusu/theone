@@ -15,10 +15,15 @@ export default function PageViewer({ token, userId }) {
     chapterId: '',
     image: null,
     imageUrl: '',
+    subImage: null,
+    subImageUrl: '',
   });
   const [previewUrl, setPreviewUrl] = useState('');
+  const [subPreviewUrl, setSubPreviewUrl] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [isSubDragging, setIsSubDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const subFileInputRef = useRef(null);
 
   useEffect(() => {
     axios.get('/api/chapters').then((res) => {
@@ -68,8 +73,11 @@ export default function PageViewer({ token, userId }) {
           chapterId: selectedChapterId,
           image: null,
           imageUrl: page.imageUrl || '',
+          subImage: null,
+          subImageUrl: page.subImageUrl || '',
         });
         setPreviewUrl(page.imageUrl || '');
+        setSubPreviewUrl(page.subImageUrl || '');
       })
       .catch((err) => {
         console.error('❌ 페이지 조회 실패:', err);
@@ -85,8 +93,11 @@ export default function PageViewer({ token, userId }) {
       chapterId: selectedChapterId,
       image: null,
       imageUrl: '',
+      subImage: null,
+      subImageUrl: '',
     });
     setPreviewUrl('');
+    setSubPreviewUrl('');
   };
 
   const handleChange = (e) => {
@@ -105,7 +116,7 @@ export default function PageViewer({ token, userId }) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      alert(`❌ 파일 용량이 너무 큽니다.\n최대 10MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      alert(`❌ 파일 용량이 너무 큽니다.\n최대 20MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       return;
     }
 
@@ -144,6 +155,55 @@ export default function PageViewer({ token, userId }) {
     }
   };
 
+  // 보조 이미지 핸들러
+  const handleSubFile = (file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('❌ 이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`❌ 파일 용량이 너무 큽니다.\n최대 20MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, subImage: file }));
+    const reader = new FileReader();
+    reader.onloadend = () => setSubPreviewUrl(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleSubFile(file);
+    } else {
+      setForm((prev) => ({ ...prev, subImage: null }));
+      setSubPreviewUrl(form.subImageUrl || '');
+    }
+  };
+
+  const handleSubDragOver = (e) => {
+    e.preventDefault();
+    setIsSubDragging(true);
+  };
+
+  const handleSubDragLeave = (e) => {
+    e.preventDefault();
+    setIsSubDragging(false);
+  };
+
+  const handleSubDrop = (e) => {
+    e.preventDefault();
+    setIsSubDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleSubFile(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.chapterId) {
@@ -165,6 +225,19 @@ export default function PageViewer({ token, userId }) {
         imageUrl = imageRes.data.url;
       }
 
+      let subImageUrl = form.subImageUrl;
+      if (form.subImage) {
+        const subImageForm = new FormData();
+        subImageForm.append('file', form.subImage);
+        const subImageRes = await axios.post('/api/upload', subImageForm, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        subImageUrl = subImageRes.data.url;
+      }
+
       const pageList = await axios.get('/api/pages', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -178,6 +251,7 @@ export default function PageViewer({ token, userId }) {
         content: form.content || '',
         memo: form.memo || '',
         imageUrl,
+        subImageUrl,
         chapterId: parseInt(form.chapterId),
         userId: parseInt(userId),
         order: newOrder,
@@ -271,10 +345,16 @@ export default function PageViewer({ token, userId }) {
                 chapterId: selectedChapterId,
                 image: null,
                 imageUrl: '',
+                subImage: null,
+                subImageUrl: '',
               });
               setPreviewUrl('');
+              setSubPreviewUrl('');
               if (fileInputRef.current) {
                 fileInputRef.current.value = '';
+              }
+              if (subFileInputRef.current) {
+                subFileInputRef.current.value = '';
               }
               setSelectedPageId(newId);
             } else {
@@ -325,7 +405,45 @@ export default function PageViewer({ token, userId }) {
           </div>
         ) : (
           <div className="dropzone-text">
-            <span>📷 이미지를 드래그하거나 클릭하여 선택</span>
+            <span>📷 메인 이미지를 드래그하거나 클릭하여 선택</span>
+            <span className="file-limit">(최대 20MB)</span>
+          </div>
+        )}
+      </div>
+
+      <div
+        className={`dropzone sub-dropzone ${isSubDragging ? 'dragging' : ''}`}
+        onDragOver={handleSubDragOver}
+        onDragLeave={handleSubDragLeave}
+        onDrop={handleSubDrop}
+        onClick={() => subFileInputRef.current?.click()}
+      >
+        <input
+          type="file"
+          ref={subFileInputRef}
+          onChange={handleSubFileChange}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+        {subPreviewUrl ? (
+          <div className="image-preview">
+            <img src={subPreviewUrl} alt="보조 이미지 미리보기" />
+            <button
+              type="button"
+              className="remove-image"
+              onClick={(e) => {
+                e.stopPropagation();
+                setForm((prev) => ({ ...prev, subImage: null, subImageUrl: '' }));
+                setSubPreviewUrl('');
+                if (subFileInputRef.current) subFileInputRef.current.value = '';
+              }}
+            >
+              ✕ 보조 이미지 삭제
+            </button>
+          </div>
+        ) : (
+          <div className="dropzone-text">
+            <span>📷 보조 이미지를 드래그하거나 클릭하여 선택</span>
             <span className="file-limit">(최대 20MB)</span>
           </div>
         )}

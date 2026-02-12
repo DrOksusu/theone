@@ -46,7 +46,7 @@ router.put("/:id", async (req, res) => {
   console.log("📝 요청 바디:", req.body);
 
   const pageId = parseInt(req.params.id);
-  const { title, content, memo, imageUrl, chapterId, userId, order } = req.body;
+  const { title, content, memo, imageUrl, subImageUrl, chapterId, userId, order } = req.body;
 
   // 파싱 및 값 확인
   const parsedOrder = parseInt(order);
@@ -85,6 +85,7 @@ router.put("/:id", async (req, res) => {
         content,
         memo,
         imageUrl,
+        subImageUrl,
         order: parsedOrder,
         chapter: { connect: { id: parsedChapterId } },
         user: { connect: { id: parsedUserId } },
@@ -115,12 +116,13 @@ router.put("/:id", async (req, res) => {
 // 페이지 생성 API
 // 
 router.post("/", async (req, res) => {
-  const { title, imageUrl, content, memo, chapterId, userId, order } = req.body;
+  const { title, imageUrl, subImageUrl, content, memo, chapterId, userId, order } = req.body;
 
   console.log("📥 [요청 수신] 페이지 생성 요청 도착");
   console.log("📝 요청 바디:", {
     title,
     imageUrl,
+    subImageUrl,
     content,
     memo,
     chapterId,
@@ -177,6 +179,7 @@ router.post("/", async (req, res) => {
       data: {
         title,
         imageUrl,
+        subImageUrl,
         content,
         memo,
         chapterId: parsedChapterId,
@@ -219,6 +222,7 @@ router.get("/:id", async (req, res) => {
         content: true,
         memo: true,
         imageUrl: true,
+        subImageUrl: true,
         order: true,
         chapterId: true,
         userId: true,

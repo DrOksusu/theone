@@ -27,11 +27,12 @@ model Chapter {
 }
 
 model Page {
-  id         Int      @id @default(autoincrement())
-  title      String
-  imageUrl   String?  // 이미지 업로드된 URL
-  content    String   @db.LongText  // 본문
-  memo       String?  @db.Text      // 메모
+  id          Int      @id @default(autoincrement())
+  title       String
+  imageUrl    String?  // 메인 이미지 URL
+  subImageUrl String?  // 보조 이미지 URL
+  content     String   @db.LongText  // 본문
+  memo        String?  @db.Text      // 메모
 
   chapterId  Int
   chapter    Chapter  @relation(fields: [chapterId], references: [id])
