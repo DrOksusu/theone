@@ -373,6 +373,41 @@ export default function PageViewer({ token, userId }) {
         </select>
       </div>
 
+      {pages.length > 0 && (() => {
+        const currentIdx = pages.findIndex((p) => p.id.toString() === selectedPageId);
+        return (
+          <div className="page-nav">
+            <button
+              type="button"
+              className="page-nav-btn"
+              disabled={currentIdx <= 0}
+              onClick={() => {
+                if (currentIdx > 0) setSelectedPageId(pages[currentIdx - 1].id.toString());
+              }}
+            >
+              ←
+            </button>
+            <span className="page-nav-info">
+              {currentIdx >= 0 ? currentIdx + 1 : '-'} / {pages.length}
+            </span>
+            <button
+              type="button"
+              className="page-nav-btn"
+              disabled={currentIdx >= pages.length - 1}
+              onClick={() => {
+                if (currentIdx < 0) {
+                  setSelectedPageId(pages[0].id.toString());
+                } else if (currentIdx < pages.length - 1) {
+                  setSelectedPageId(pages[currentIdx + 1].id.toString());
+                }
+              }}
+            >
+              →
+            </button>
+          </div>
+        );
+      })()}
+
       <div
         className={`dropzone ${isDragging ? 'dragging' : ''}`}
         onDragOver={handleDragOver}

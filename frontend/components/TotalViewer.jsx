@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
 
-export default function TotalViewer({ token }) {
+export default function TotalViewer({ token, userId }) {
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverItem, setDragOverItem] = useState(null);
+  const [addingChapterId, setAddingChapterId] = useState(null);
+  const [addingTitle, setAddingTitle] = useState('');
+  const addInputRef = useRef(null);
 
   useEffect(() => {
     fetchChaptersWithPages();
@@ -148,6 +151,58 @@ export default function TotalViewer({ token }) {
     setDragOverItem(null);
   };
 
+  const startAdding = (chapterId) => {
+    setAddingChapterId(chapterId);
+    setAddingTitle('');
+    setTimeout(() => addInputRef.current?.focus(), 0);
+  };
+
+  const cancelAdding = () => {
+    setAddingChapterId(null);
+    setAddingTitle('');
+  };
+
+  const submitAddWord = async (chapterId) => {
+    if (!addingTitle.trim()) {
+      cancelAdding();
+      return;
+    }
+
+    try {
+      const chapter = chapters.find((ch) => ch.id === chapterId);
+      const newOrder = chapter.pages?.length
+        ? Math.max(...chapter.pages.map((p) => p.order)) + 1
+        : 1;
+
+      await axios.post('/api/pages', {
+        title: addingTitle.trim(),
+        content: '',
+        memo: '',
+        chapterId,
+        userId: parseInt(userId),
+        order: newOrder,
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      setAddingTitle('');
+      fetchChaptersWithPages();
+    } catch (error) {
+      console.error('❌ 단어 추가 실패:', error);
+      alert('단어 추가 중 오류가 발생했습니다.');
+    }
+    cancelAdding();
+  };
+
+  const handleAddKeyDown = (e, chapterId) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitAddWord(chapterId);
+    } else if (e.key === 'Escape') {
+      cancelAdding();
+    }
+  };
+
   // 전체 단어 수 계산
   const totalWords = chapters.reduce((sum, ch) => sum + (ch.pages?.length || 0), 0);
 
@@ -208,6 +263,27 @@ export default function TotalViewer({ token }) {
                             ✕
                           </button>
                         </div>
+                      ) : rowIndex === (chapter.pages?.length || 0) ? (
+                        addingChapterId === chapter.id ? (
+                          <input
+                            ref={addInputRef}
+                            className="word-add-input"
+                            type="text"
+                            value={addingTitle}
+                            onChange={(e) => setAddingTitle(e.target.value)}
+                            onKeyDown={(e) => handleAddKeyDown(e, chapter.id)}
+                            onBlur={() => submitAddWord(chapter.id)}
+                            placeholder="단어 입력"
+                          />
+                        ) : (
+                          <button
+                            className="word-add-btn"
+                            onClick={() => startAdding(chapter.id)}
+                            title="단어 추가"
+                          >
+                            +
+                          </button>
+                        )
                       ) : ''}
                     </td>
                   );
