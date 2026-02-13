@@ -12,6 +12,8 @@ model User {
   username  String   @unique
   password  String
   name      String
+  lastChapterId Int?
+  lastPageId    Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   pages     Page[]

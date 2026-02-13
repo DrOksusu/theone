@@ -3,11 +3,12 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
 
-export default function PageViewer({ token, userId }) {
+export default function PageViewer({ token, userId, lastChapterId, lastPageId }) {
   const [chapters, setChapters] = useState([]);
   const [pages, setPages] = useState([]);
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [selectedPageId, setSelectedPageId] = useState('');
+  const [initialized, setInitialized] = useState(false);
   const [form, setForm] = useState({
     title: '',
     content: '',
@@ -30,6 +31,10 @@ export default function PageViewer({ token, userId }) {
     axios.get('/api/chapters').then((res) => {
       if (Array.isArray(res.data)) {
         setChapters(res.data);
+        if (!initialized && lastChapterId) {
+          setSelectedChapterId(lastChapterId.toString());
+          setForm((prev) => ({ ...prev, chapterId: lastChapterId.toString() }));
+        }
       } else {
         console.error('📛 chapters 응답이 배열이 아님:', res.data);
         setChapters([]);
@@ -43,7 +48,16 @@ export default function PageViewer({ token, userId }) {
         .get(`/api/chapters/${selectedChapterId}/pages`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((res) => setPages(res.data));
+        .then((res) => {
+          setPages(res.data);
+          if (!initialized && lastPageId) {
+            const exists = res.data.some((p) => p.id.toString() === lastPageId.toString());
+            if (exists) {
+              setSelectedPageId(lastPageId.toString());
+            }
+            setInitialized(true);
+          }
+        });
     } else {
       setPages([]);
       setSelectedPageId('');
@@ -106,6 +120,17 @@ export default function PageViewer({ token, userId }) {
     setPreviewUrl('');
     setSubPreviewUrl('');
     setPageInfo(null);
+  };
+
+  const saveLastPosition = (chapterId, pageId) => {
+    if (!userId) return;
+    axios.put('/api/auth/last-position', {
+      userId,
+      lastChapterId: chapterId || null,
+      lastPageId: pageId || null,
+    }, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch(() => {});
   };
 
   const handleChange = (e) => {
@@ -320,6 +345,7 @@ export default function PageViewer({ token, userId }) {
             const value = e.target.value;
             setSelectedChapterId(value);
             setForm((prev) => ({ ...prev, chapterId: value }));
+            saveLastPosition(value, '');
           }}
         >
           <option value="">챕터 선택</option>
@@ -368,6 +394,7 @@ export default function PageViewer({ token, userId }) {
             } else {
               console.log('🔄 단어 선택됨:', value);
               setSelectedPageId(value);
+              saveLastPosition(selectedChapterId, value);
             }
           }}
         >
@@ -390,7 +417,11 @@ export default function PageViewer({ token, userId }) {
               className="page-nav-btn"
               disabled={currentIdx <= 0}
               onClick={() => {
-                if (currentIdx > 0) setSelectedPageId(pages[currentIdx - 1].id.toString());
+                if (currentIdx > 0) {
+                  const newId = pages[currentIdx - 1].id.toString();
+                  setSelectedPageId(newId);
+                  saveLastPosition(selectedChapterId, newId);
+                }
               }}
             >
               ←
@@ -403,10 +434,15 @@ export default function PageViewer({ token, userId }) {
               className="page-nav-btn"
               disabled={currentIdx >= pages.length - 1}
               onClick={() => {
+                let newId;
                 if (currentIdx < 0) {
-                  setSelectedPageId(pages[0].id.toString());
+                  newId = pages[0].id.toString();
                 } else if (currentIdx < pages.length - 1) {
-                  setSelectedPageId(pages[currentIdx + 1].id.toString());
+                  newId = pages[currentIdx + 1].id.toString();
+                }
+                if (newId) {
+                  setSelectedPageId(newId);
+                  saveLastPosition(selectedChapterId, newId);
                 }
               }}
             >

@@ -45,6 +45,8 @@ router.post("/login", async (req, res) => {
         id: user.id,
         username: user.username,
         name: user.name,
+        lastChapterId: user.lastChapterId,
+        lastPageId: user.lastPageId,
       },
     });
   } catch (error) {
@@ -68,6 +70,30 @@ router.get("/users", async (req, res) => {
   } catch (error) {
     console.error("사용자 목록 조회 에러:", error);
     res.status(500).json({ message: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 마지막 작업 위치 저장
+router.put("/last-position", async (req, res) => {
+  try {
+    const { userId, lastChapterId, lastPageId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId가 필요합니다." });
+    }
+
+    await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: {
+        lastChapterId: lastChapterId ? parseInt(lastChapterId) : null,
+        lastPageId: lastPageId ? parseInt(lastPageId) : null,
+      },
+    });
+
+    res.json({ message: "위치 저장 완료" });
+  } catch (error) {
+    console.error("위치 저장 오류:", error);
+    res.status(500).json({ message: "서버 오류" });
   }
 });
 

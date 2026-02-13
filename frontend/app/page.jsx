@@ -47,7 +47,7 @@ export default function Home() {
         <span>👤 {user?.name || user?.username}</span>
         <button onClick={handleLogout} className="logout-btn">로그아웃</button>
       </div>
-      <PageViewer token={token} userId={user?.id} />
+      <PageViewer token={token} userId={user?.id} lastChapterId={user?.lastChapterId} lastPageId={user?.lastPageId} />
     </div>
   );
 }
