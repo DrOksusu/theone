@@ -14,7 +14,8 @@ model User {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  pages     Page[]   // ✅ 페이지 연결
+  pages     Page[]
+  updatedPages Page[] @relation("PageUpdatedBy")
 }
 
 model Chapter {
@@ -39,6 +40,9 @@ model Page {
 
   userId     Int
   user       User     @relation(fields: [userId], references: [id])
+
+  updatedBy    Int?
+  updatedByUser User?  @relation("PageUpdatedBy", fields: [updatedBy], references: [id])
 
   order      Int      // 챕터 안에서의 순서 (1부터 시작)
 

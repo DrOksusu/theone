@@ -20,6 +20,7 @@ export default function PageViewer({ token, userId }) {
   });
   const [previewUrl, setPreviewUrl] = useState('');
   const [subPreviewUrl, setSubPreviewUrl] = useState('');
+  const [pageInfo, setPageInfo] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubDragging, setIsSubDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -78,6 +79,12 @@ export default function PageViewer({ token, userId }) {
         });
         setPreviewUrl(page.imageUrl || '');
         setSubPreviewUrl(page.subImageUrl || '');
+        setPageInfo({
+          createdBy: page.user?.name || '',
+          updatedByName: page.updatedByUser?.name || '',
+          createdAt: page.createdAt,
+          updatedAt: page.updatedAt,
+        });
       })
       .catch((err) => {
         console.error('❌ 페이지 조회 실패:', err);
@@ -98,6 +105,7 @@ export default function PageViewer({ token, userId }) {
     });
     setPreviewUrl('');
     setSubPreviewUrl('');
+    setPageInfo(null);
   };
 
   const handleChange = (e) => {
@@ -539,6 +547,15 @@ export default function PageViewer({ token, userId }) {
           삭제하기
         </button>
       </div>
+
+      {pageInfo && (
+        <div className="page-meta">
+          <span>작성: {pageInfo.createdBy}</span>
+          {pageInfo.updatedByName && (
+            <span>수정: {pageInfo.updatedByName} ({new Date(pageInfo.updatedAt).toLocaleDateString('ko-KR')})</span>
+          )}
+        </div>
+      )}
     </form>
   );
 }

@@ -89,6 +89,7 @@ router.put("/:id", async (req, res) => {
         order: parsedOrder,
         chapter: { connect: { id: parsedChapterId } },
         user: { connect: { id: parsedUserId } },
+        updatedBy: parsedUserId,
       },
     });
 
@@ -226,8 +227,11 @@ router.get("/:id", async (req, res) => {
         order: true,
         chapterId: true,
         userId: true,
+        updatedBy: true,
         createdAt: true,
         updatedAt: true,
+        user: { select: { name: true } },
+        updatedByUser: { select: { name: true } },
       },
     });
 

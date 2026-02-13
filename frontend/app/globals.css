@@ -135,6 +135,15 @@ button[type="submit"]:hover:not(:disabled) {
   flex: 1;
 }
 
+.page-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
 .delete-btn {
   background-color: #ef4444 !important;
   color: white;
