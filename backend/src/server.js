@@ -29,12 +29,14 @@ const authRoutes = require("./routes/auth");
 const chapterRoutes = require("./routes/chapters");
 const pageRoutes = require("./routes/pages"); // ✅ 새로 추가
 const uploadRoutes = require("./routes/upload"); // ✅ 파일 업로드 라우트
+const pdfRoutes = require("./routes/pdf"); // ✅ PDF 내보내기 라우트
 
 // 라우트 등록
 app.use("/api/auth", authRoutes);
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/pages", pageRoutes); // ✅ 페이지 API 등록
 app.use("/api/upload", uploadRoutes); // ✅ 파일 업로드 API 등록
+app.use("/api/pdf", pdfRoutes); // ✅ PDF 내보내기 API 등록
 
 // 정적 파일 경로 설정 (이미지 접근 가능하게)
 app.use("/uploads", express.static("uploads"));

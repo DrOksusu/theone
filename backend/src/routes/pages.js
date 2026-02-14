@@ -210,6 +210,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+// 공정률 통계 API
+router.get("/stats", async (req, res) => {
+  try {
+    const total = await prisma.page.count();
+    const confirmed = await prisma.page.count({ where: { confirmed: true } });
+    res.json({ total, confirmed });
+  } catch (error) {
+    console.error("통계 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류" });
+  }
+});
+
 // 📘 2. 특정 페이지 상세 조회
 router.get("/:id", async (req, res) => {
   const pageId = parseInt(req.params.id);
@@ -228,6 +240,7 @@ router.get("/:id", async (req, res) => {
         chapterId: true,
         userId: true,
         updatedBy: true,
+        confirmed: true,
         createdAt: true,
         updatedAt: true,
         user: { select: { name: true } },
@@ -267,6 +280,28 @@ router.put("/:id/reorder", async (req, res) => {
   } catch (error) {
     console.error("❌ 페이지 순서 변경 실패:", error);
     res.status(500).json({ error: "페이지 순서 변경 중 오류가 발생했습니다." });
+  }
+});
+
+// 확정 토글 API
+router.put("/:id/confirm", async (req, res) => {
+  const pageId = parseInt(req.params.id);
+
+  try {
+    const page = await prisma.page.findUnique({ where: { id: pageId } });
+    if (!page) {
+      return res.status(404).json({ error: "페이지를 찾을 수 없습니다." });
+    }
+
+    const updated = await prisma.page.update({
+      where: { id: pageId },
+      data: { confirmed: !page.confirmed },
+    });
+
+    res.json({ confirmed: updated.confirmed });
+  } catch (error) {
+    console.error("확정 토글 오류:", error);
+    res.status(500).json({ error: "확정 상태 변경 중 오류가 발생했습니다." });
   }
 });
 

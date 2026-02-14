@@ -73,6 +73,38 @@ router.get("/users", async (req, res) => {
   }
 });
 
+// 현재 사용자 정보 조회 (최신 lastChapterId/lastPageId 포함)
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "토큰이 필요합니다." });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+    }
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      lastChapterId: user.lastChapterId,
+      lastPageId: user.lastPageId,
+    });
+  } catch (error) {
+    console.error("사용자 조회 오류:", error);
+    res.status(401).json({ message: "유효하지 않은 토큰입니다." });
+  }
+});
+
 // 마지막 작업 위치 저장
 router.put("/last-position", async (req, res) => {
   try {

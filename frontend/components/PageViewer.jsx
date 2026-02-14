@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useContext } from 'react';
 import axios from '@/lib/axios';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function PageViewer({ token, userId, lastChapterId, lastPageId }) {
+  const { refreshStats } = useAuth();
   const [chapters, setChapters] = useState([]);
   const [pages, setPages] = useState([]);
+  const [confirmed, setConfirmed] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [selectedPageId, setSelectedPageId] = useState('');
   const [initialized, setInitialized] = useState(false);
@@ -91,6 +94,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           subImage: null,
           subImageUrl: page.subImageUrl || '',
         });
+        setConfirmed(page.confirmed || false);
         setPreviewUrl(page.imageUrl || '');
         setSubPreviewUrl(page.subImageUrl || '');
         setPageInfo({
@@ -120,6 +124,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     setPreviewUrl('');
     setSubPreviewUrl('');
     setPageInfo(null);
+    setConfirmed(false);
   };
 
   const saveLastPosition = (chapterId, pageId) => {
@@ -399,11 +404,15 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           }}
         >
           <option value="">단어 선택</option>
-          {pages.map((page) => (
-            <option key={page.id} value={page.id}>
-              {page.title}
-            </option>
-          ))}
+          {pages.map((page, idx) => {
+            const chapterIdx = chapters.findIndex((ch) => ch.id.toString() === selectedChapterId);
+            const globalOffset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch._count?.pages || 0), 0);
+            return (
+              <option key={page.id} value={page.id}>
+                {globalOffset + idx + 1}. {page.title}
+              </option>
+            );
+          })}
           <option value="add_new">➕ 단어 추가</option>
         </select>
       </div>
@@ -427,7 +436,12 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
               ←
             </button>
             <span className="page-nav-info">
-              {currentIdx >= 0 ? currentIdx + 1 : '-'} / {pages.length}
+              {(() => {
+                const chapterIdx = chapters.findIndex((ch) => ch.id.toString() === selectedChapterId);
+                const globalOffset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch._count?.pages || 0), 0);
+                const globalPageNum = currentIdx >= 0 ? globalOffset + currentIdx + 1 : '-';
+                return `p.${globalPageNum} (${currentIdx >= 0 ? currentIdx + 1 : '-'}/${pages.length})`;
+              })()}
             </span>
             <button
               type="button"
@@ -547,6 +561,25 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       <div className="button-row">
         <button type="submit" disabled={!form.chapterId || !form.title}>
           저장하기
+        </button>
+        <button
+          type="button"
+          className={confirmed ? 'confirm-btn confirmed' : 'confirm-btn'}
+          disabled={!selectedPageId || selectedPageId.startsWith('_new_')}
+          onClick={async () => {
+            try {
+              const res = await axios.put(`/api/pages/${selectedPageId}/confirm`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              setConfirmed(res.data.confirmed);
+              if (refreshStats) refreshStats();
+            } catch (error) {
+              console.error('확정 토글 실패:', error);
+              alert('확정 상태 변경 중 오류가 발생했습니다.');
+            }
+          }}
+        >
+          {confirmed ? '확정취소' : '확정하기'}
         </button>
         <button
           type="button"

@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
   try {
     const chapters = await prisma.chapter.findMany({
       orderBy: { order: "asc" },
+      include: { _count: { select: { pages: true } } },
     });
     res.json(chapters);
   } catch (err) {

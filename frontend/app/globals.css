@@ -249,6 +249,63 @@ button[type="submit"]:hover:not(:disabled) {
   background: #dc2626;
 }
 
+/* 공정률 프로그레스 바 */
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: auto;
+}
+
+.progress-label {
+  font-size: 0.85rem;
+  color: #374151;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.progress-bar {
+  width: 120px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* 확정 버튼 */
+.confirm-btn {
+  background-color: #f59e0b !important;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.confirm-btn:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  background-color: #d97706 !important;
+}
+
+.confirm-btn.confirmed {
+  background-color: #22c55e !important;
+}
+
+.confirm-btn.confirmed:hover:not(:disabled) {
+  background-color: #16a34a !important;
+}
+
 /* 드래그앤드롭 이미지 업로드 */
 .dropzone {
   border: 2px dashed #ccc;
@@ -416,12 +473,43 @@ button[type="submit"]:hover:not(:disabled) {
   text-align: center;
 }
 
+/* 전체 보기 헤더 */
+.total-header-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 /* 전체 보기 요약 */
 .total-summary {
   text-align: center;
   color: #6b7280;
-  margin-bottom: 1rem;
+  margin: 0;
   font-size: 0.9rem;
+}
+
+/* PDF 다운로드 버튼 */
+.pdf-download-btn {
+  padding: 6px 16px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.pdf-download-btn:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.pdf-download-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 /* 테이블 컨테이너 */
@@ -599,4 +687,186 @@ button[type="submit"]:hover:not(:disabled) {
   font-style: italic;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* ===== 모바일 반응형 (max-width: 640px) ===== */
+@media (max-width: 640px) {
+  /* 네비게이션 */
+  .nav-menu {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .nav-link {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  /* 앱 제목 */
+  h1.text-xl {
+    font-size: 1.1rem;
+    margin-top: 0.5rem !important;
+  }
+
+  /* 유저 정보 바 */
+  .user-info {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .progress-section {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .progress-bar {
+    width: 80px;
+  }
+
+  .progress-label {
+    font-size: 0.8rem;
+  }
+
+  .logout-btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  /* 페이지 폼 */
+  .page-form {
+    max-width: 100%;
+    padding: 0.75rem;
+  }
+
+  .page-form h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* 셀렉트 세로 배치 */
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  select {
+    padding: 10px 8px;
+    font-size: 1rem;
+  }
+
+  /* textarea 모바일 제한 */
+  textarea {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 1rem;
+  }
+
+  /* 버튼 줄바꿈 허용 */
+  .button-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row button {
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  /* 드롭존 이미지 */
+  .dropzone .image-preview img {
+    max-height: 250px;
+  }
+
+  .dropzone.sub-dropzone .image-preview img {
+    max-height: 80px;
+  }
+
+  .dropzone {
+    padding: 1rem;
+  }
+
+  .dropzone-text {
+    font-size: 0.85rem;
+  }
+
+  /* 삭제 버튼 터치 타겟 키우기 */
+  .remove-image {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .delete-btn,
+  .confirm-btn,
+  button[type="submit"] {
+    min-height: 44px;
+  }
+
+  /* 페이지 메타 */
+  .page-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-end;
+  }
+
+  /* 페이지 네비게이션 */
+  .page-nav {
+    gap: 0.5rem;
+  }
+
+  .page-nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+
+  /* === TotalViewer === */
+  .total-viewer {
+    padding: 0.5rem;
+  }
+
+  .total-viewer h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .total-header-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* 테이블 셀 터치 타겟 */
+  .pages-table th,
+  .pages-table td {
+    padding: 0.5rem;
+  }
+
+  .word-cell {
+    min-height: 36px;
+    gap: 4px;
+    font-size: 0.85rem;
+  }
+
+  .word-delete-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .word-add-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  /* 로그인 폼 */
+  .login-container {
+    min-height: 50vh;
+    padding: 1rem;
+  }
+
+  .login-form {
+    padding: 1.5rem;
+  }
 }

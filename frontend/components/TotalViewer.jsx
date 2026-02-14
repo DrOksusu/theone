@@ -10,6 +10,7 @@ export default function TotalViewer({ token, userId }) {
   const [dragOverItem, setDragOverItem] = useState(null);
   const [addingChapterId, setAddingChapterId] = useState(null);
   const [addingTitle, setAddingTitle] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
   const addInputRef = useRef(null);
 
   useEffect(() => {
@@ -203,6 +204,28 @@ export default function TotalViewer({ token, userId }) {
     }
   };
 
+  const handlePdfDownload = async () => {
+    setPdfLoading(true);
+    try {
+      const res = await fetch('/api/pdf/export');
+      if (!res.ok) throw new Error('PDF 생성 실패');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TheOneBook.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PDF 다운로드 오류:', error);
+      alert('PDF 다운로드 중 오류가 발생했습니다.');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   // 전체 단어 수 계산
   const totalWords = chapters.reduce((sum, ch) => sum + (ch.pages?.length || 0), 0);
 
@@ -216,7 +239,16 @@ export default function TotalViewer({ token, userId }) {
   return (
     <div className="total-viewer">
       <h2>📘 챕터 및 단어 한눈에 보기</h2>
-      <p className="total-summary">총 {chapters.length}개 챕터, {totalWords}개 단어</p>
+      <div className="total-header-row">
+        <p className="total-summary">총 {chapters.length}개 챕터, {totalWords}개 단어</p>
+        <button
+          className="pdf-download-btn"
+          onClick={handlePdfDownload}
+          disabled={pdfLoading}
+        >
+          {pdfLoading ? 'PDF 생성 중...' : 'PDF 다운로드'}
+        </button>
+      </div>
 
       <div className="table-container">
         <table className="pages-table pivot-table">
@@ -254,7 +286,11 @@ export default function TotalViewer({ token, userId }) {
                           onDragEnd={handleDragEnd}
                         >
                           <span className="drag-handle">⋮⋮</span>
-                          <span>{page.title}</span>
+                          <span>{(() => {
+                            const chapterIdx = chapters.findIndex((ch) => ch.id === chapter.id);
+                            const offset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch.pages?.length || 0), 0);
+                            return `${offset + rowIndex + 1}. ${page.title}`;
+                          })()}</span>
                           <button
                             className="word-delete-btn"
                             onClick={() => handleDelete(page.id, page.title)}

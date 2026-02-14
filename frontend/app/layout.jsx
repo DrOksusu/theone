@@ -1,5 +1,6 @@
 import './globals.css';
 import Link from 'next/link';
+import AuthProvider from '@/components/AuthProvider';
 
 export const metadata = {
   title: 'The One Book',
@@ -18,7 +19,9 @@ export default function RootLayout({ children }) {
             <Link href="/" className="nav-link">📝단어 추가 및 수정(삭제)</Link>
           </nav>
 
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </div>
       </body>
     </html>
