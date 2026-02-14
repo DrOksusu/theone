@@ -708,31 +708,25 @@ button[type="submit"]:hover:not(:disabled) {
     margin-top: 0.5rem !important;
   }
 
-  /* 유저 정보 바 */
+  /* 유저 정보 바 - 한 줄 유지 */
   .user-info {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.4rem 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .progress-section {
-    order: 2;
-    width: 100%;
-    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
   }
 
   .progress-bar {
-    width: 80px;
+    display: none;
   }
 
   .progress-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .logout-btn {
-    padding: 4px 8px;
-    font-size: 0.8rem;
+    padding: 3px 6px;
+    font-size: 0.75rem;
   }
 
   /* 페이지 폼 */
