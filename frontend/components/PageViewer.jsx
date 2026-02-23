@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
 import { useAuth } from '@/components/AuthProvider';
+import { useToast } from '@/components/ToastProvider';
 import ImageDropzone from '@/components/ImageDropzone';
 import ChapterPageSelector from '@/components/ChapterPageSelector';
 import PageNavigation from '@/components/PageNavigation';
 
 export default function PageViewer({ token, userId, lastChapterId, lastPageId }) {
   const { refreshStats } = useAuth();
+  const toast = useToast();
   const [chapters, setChapters] = useState([]);
   const [pages, setPages] = useState([]);
   const [confirmed, setConfirmed] = useState(false);
@@ -108,7 +110,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       })
       .catch((err) => {
         console.error('페이지 조회 실패:', err);
-        alert('페이지 조회 중 오류가 발생했습니다.');
+        toast.error('페이지 조회 중 오류가 발생했습니다.');
       });
   }, [selectedPageId, selectedChapterId, token]);
 
@@ -157,7 +159,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     if (value === 'add_new') {
       const newTitle = prompt('새로운 단어(타이틀)를 입력해주세요:');
       if (!newTitle || newTitle.trim() === '') {
-        alert('단어 제목을 입력해주세요!');
+        toast.error('단어 제목을 입력해주세요!');
         return;
       }
       const trimmedTitle = newTitle.trim();
@@ -224,7 +226,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.chapterId) {
-      alert('필수 항목을 입력해주세요!');
+      toast.error('필수 항목을 입력해주세요!');
       return;
     }
 
@@ -283,14 +285,14 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           await axios.put(`/api/pages/${existingPage.id}`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          alert('기존 페이지를 성공적으로 수정했습니다!');
+          toast.success('기존 페이지를 성공적으로 수정했습니다!');
 
           const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setPages(pagesRes.data);
         } else {
-          alert('같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
+          toast.error('같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
           return;
         }
       } else {
@@ -299,7 +301,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('새 페이지 생성 완료:', newPageRes.data);
-        alert('새 페이지를 성공적으로 생성했습니다!');
+        toast.success('새 페이지를 성공적으로 생성했습니다!');
 
         console.log('페이지 목록 갱신 중...');
         const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
@@ -312,7 +314,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       }
     } catch (error) {
       console.error('저장 중 오류:', error);
-      alert('저장 중 문제가 발생했습니다!');
+      toast.error('저장 중 문제가 발생했습니다!');
     }
   };
 
@@ -326,7 +328,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       if (refreshStats) refreshStats();
     } catch (error) {
       console.error('확정 토글 실패:', error);
-      alert('확정 상태 변경 중 오류가 발생했습니다.');
+      toast.error('확정 상태 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -344,7 +346,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       await axios.delete(`/api/pages/${selectedPageId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('단어가 삭제되었습니다.');
+      toast.success('단어가 삭제되었습니다.');
 
       const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -354,7 +356,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
       resetForm();
     } catch (error) {
       console.error('삭제 실패:', error);
-      alert('삭제 중 오류가 발생했습니다.');
+      toast.error('삭제 중 오류가 발생했습니다.');
     }
   };
 

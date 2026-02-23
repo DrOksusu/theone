@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
+import { useToast } from '@/components/ToastProvider';
 import WordCell from '@/components/WordCell';
 
 export default function TotalViewer({ token, userId }) {
+  const toast = useToast();
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -53,11 +55,11 @@ export default function TotalViewer({ token, userId }) {
       await axios.delete(`/api/pages/${pageId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      alert('단어가 삭제되었습니다.');
+      toast.success('단어가 삭제되었습니다.');
       fetchChaptersWithPages();
     } catch (error) {
       console.error('삭제 실패:', error);
-      alert('삭제 중 오류가 발생했습니다.');
+      toast.error('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -140,7 +142,7 @@ export default function TotalViewer({ token, userId }) {
 
     } catch (error) {
       console.error('순서 변경 실패:', error);
-      alert('순서 변경 중 오류가 발생했습니다.');
+      toast.error('순서 변경 중 오류가 발생했습니다.');
       fetchChaptersWithPages();
     }
 
@@ -191,7 +193,7 @@ export default function TotalViewer({ token, userId }) {
       fetchChaptersWithPages();
     } catch (error) {
       console.error('단어 추가 실패:', error);
-      alert('단어 추가 중 오류가 발생했습니다.');
+      toast.error('단어 추가 중 오류가 발생했습니다.');
     }
     cancelAdding();
   };
@@ -221,7 +223,7 @@ export default function TotalViewer({ token, userId }) {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('PDF 다운로드 오류:', error);
-      alert('PDF 다운로드 중 오류가 발생했습니다.');
+      toast.error('PDF 다운로드 중 오류가 발생했습니다.');
     } finally {
       setPdfLoading(false);
     }

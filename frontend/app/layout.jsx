@@ -1,6 +1,8 @@
 import './globals.css';
-import Link from 'next/link';
 import AuthProvider from '@/components/AuthProvider';
+import ToastProvider from '@/components/ToastProvider';
+import ThemeProvider from '@/components/ThemeProvider';
+import NavBar from '@/components/NavBar';
 
 export const metadata = {
   title: 'The One Book',
@@ -11,18 +13,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ko">
       <body>
-        <div className="App">
-          <h1 className="text-xl font-bold text-center mt-4">📘 The One</h1>
-
-          <nav className="nav-menu">
-            <Link href="/total" className="nav-link">🔍챕터 및 단어 조회</Link>
-            <Link href="/" className="nav-link">📝단어 추가 및 수정(삭제)</Link>
-          </nav>
-
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </div>
+        <ToastProvider>
+          <ThemeProvider>
+            <div className="App">
+              <h1 className="text-xl font-bold text-center mt-4">The One</h1>
+              <NavBar />
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </div>
+          </ThemeProvider>
+        </ToastProvider>
       </body>
     </html>
   );

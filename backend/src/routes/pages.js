@@ -36,6 +36,45 @@ router.get("/", async (req, res) => {
   }
 });
 
+// 단어 검색 API
+router.get("/search", async (req, res) => {
+  try {
+    const q = req.query.q || "";
+    if (!q.trim()) {
+      return res.json([]);
+    }
+
+    const pages = await prisma.page.findMany({
+      where: {
+        OR: [
+          { title: { contains: q } },
+          { content: { contains: q } },
+          { memo: { contains: q } },
+        ],
+      },
+      include: {
+        chapter: true,
+      },
+      orderBy: { id: "asc" },
+    });
+
+    const result = pages.map((p) => ({
+      id: p.id,
+      title: p.title,
+      chapterId: p.chapterId,
+      chapterTitle: p.chapter.title,
+      chapterOrder: p.chapter.order,
+      content: p.content ? p.content.substring(0, 100) : "",
+      confirmed: p.confirmed,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("검색 오류:", error);
+    res.status(500).json({ message: "서버 오류" });
+  }
+});
+
 // 공정률 통계 API
 router.get("/stats", async (req, res) => {
   try {
@@ -44,6 +83,55 @@ router.get("/stats", async (req, res) => {
     res.json({ total, confirmed });
   } catch (error) {
     console.error("통계 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류" });
+  }
+});
+
+// 상세 통계 API
+router.get("/stats/detail", async (req, res) => {
+  try {
+    const total = await prisma.page.count();
+    const confirmed = await prisma.page.count({ where: { confirmed: true } });
+
+    // 챕터별 통계
+    const chapters = await prisma.chapter.findMany({
+      orderBy: { order: "asc" },
+      include: {
+        pages: {
+          select: { confirmed: true },
+        },
+      },
+    });
+
+    const chapterStats = chapters.map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      order: ch.order,
+      total: ch.pages.length,
+      confirmed: ch.pages.filter((p) => p.confirmed).length,
+    }));
+
+    // 최근 수정된 5개 페이지
+    const recentPages = await prisma.page.findMany({
+      orderBy: { updatedAt: "desc" },
+      take: 5,
+      include: {
+        chapter: true,
+        updatedByUser: { select: { name: true } },
+      },
+    });
+
+    const recentUpdates = recentPages.map((p) => ({
+      id: p.id,
+      title: p.title,
+      chapterTitle: p.chapter.title,
+      updatedAt: p.updatedAt,
+      updatedByName: p.updatedByUser ? p.updatedByUser.name : null,
+    }));
+
+    res.json({ total, confirmed, chapters: chapterStats, recentUpdates });
+  } catch (error) {
+    console.error("상세 통계 조회 오류:", error);
     res.status(500).json({ message: "서버 오류" });
   }
 });

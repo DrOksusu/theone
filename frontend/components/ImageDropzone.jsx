@@ -1,12 +1,14 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 /**
  * 재사용 가능한 이미지 드래그앤드롭 업로드 컴포넌트
  * 메인 이미지, 보조 이미지 모두 이 컴포넌트를 사용
  */
 export default function ImageDropzone({ previewUrl, onFileChange, onRemove, label, maxSize = 20 }) {
+  const toast = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -17,12 +19,12 @@ export default function ImageDropzone({ previewUrl, onFileChange, onRemove, labe
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다.');
+      toast.error('이미지 파일만 업로드 가능합니다.');
       return;
     }
 
     if (file.size > maxFileSize) {
-      alert(`파일 용량이 너무 큽니다.\n최대 ${maxSize}MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      toast.error(`파일 용량이 너무 큽니다. 최대 ${maxSize}MB까지 업로드 가능합니다. (현재: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       return;
     }
 

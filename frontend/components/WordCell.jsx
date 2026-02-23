@@ -27,7 +27,16 @@ export default function WordCell({
       onDragEnd={onDragEnd}
     >
       <span className="drag-handle">⋮⋮</span>
-      <span>{globalOffset + rowIndex + 1}. {page.title}</span>
+      <span
+        className="word-title-link"
+        onClick={(e) => {
+          e.stopPropagation();
+          window.location.href = `/?chapterId=${chapterId}&pageId=${page.id}`;
+        }}
+        title="클릭하면 해당 단어 페이지로 이동"
+      >
+        {globalOffset + rowIndex + 1}. {page.title}
+      </span>
       <button
         className="word-delete-btn"
         onClick={() => onDelete(page.id, page.title)}
