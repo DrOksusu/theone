@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* 네비게이션 */
+/* ===== 네비게이션 ===== */
 .nav-menu {
   display: flex;
   justify-content: center;
@@ -24,12 +24,33 @@
   color: #2563eb;
 }
 
+/* ===== 페이지 폼 (PageViewer) ===== */
 .page-form {
   max-width: 600px;
   margin: auto;
   padding: 1rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+select {
+  flex: 1;
+  padding: 8px;
+}
+
+textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* ===== 페이지 네비게이션 (← →) ===== */
 .page-nav {
   display: flex;
   align-items: center;
@@ -70,26 +91,63 @@
   text-align: center;
 }
 
-.form-row {
-  display: flex;
-  gap: 10px;
+/* ===== 이미지 드래그앤드롭 (ImageDropzone) ===== */
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
   margin-bottom: 1rem;
+  background: #fafafa;
 }
 
-select {
-  flex: 1;
-  padding: 8px;
+.dropzone:hover {
+  border-color: #3b82f6;
+  background: #f0f7ff;
 }
 
-.page-details {
-  border-top: 1px solid #ccc;
-  padding-top: 1rem;
+.dropzone.dragging {
+  border-color: #3b82f6;
+  background: #e0f0ff;
+  border-style: solid;
 }
 
-.page-image {
+.dropzone-text {
+  color: #666;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-limit {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.dropzone .image-preview {
+  position: relative;
+}
+
+.dropzone .image-preview img {
   max-width: 100%;
-  margin-top: 1rem;
-  border: 1px solid #ccc;
+  max-height: 500px;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.dropzone.sub-dropzone .image-preview img {
+  max-height: 125px;
+}
+
+.dropzone.sub-dropzone {
+  padding: 1rem;
+}
+
+.dropzone.sub-dropzone .dropzone-text {
+  font-size: 0.85rem;
 }
 
 .image-preview img {
@@ -100,12 +158,31 @@ select {
   border-radius: 4px;
 }
 
-textarea {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
+.remove-image {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ef4444;
+  color: white;
+  border: none;
   border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.remove-image:hover {
+  background: #dc2626;
+}
+
+/* ===== 버튼 공통 ===== */
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row button {
+  flex: 1;
 }
 
 button[type="submit"] {
@@ -126,24 +203,34 @@ button[type="submit"]:hover:not(:disabled) {
   background-color: #2563eb;
 }
 
-.button-row {
-  display: flex;
-  gap: 10px;
+/* 확정 버튼 */
+.confirm-btn {
+  background-color: #f59e0b !important;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.button-row button {
-  flex: 1;
+.confirm-btn:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed;
 }
 
-.page-meta {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  color: #9ca3af;
+.confirm-btn:hover:not(:disabled) {
+  background-color: #d97706 !important;
 }
 
+.confirm-btn.confirmed {
+  background-color: #22c55e !important;
+}
+
+.confirm-btn.confirmed:hover:not(:disabled) {
+  background-color: #16a34a !important;
+}
+
+/* 삭제 버튼 */
 .delete-btn {
   background-color: #ef4444 !important;
   color: white;
@@ -162,7 +249,17 @@ button[type="submit"]:hover:not(:disabled) {
   background-color: #dc2626 !important;
 }
 
-/* 로그인 스타일 */
+/* ===== 페이지 메타 정보 ===== */
+.page-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* ===== 로그인 ===== */
 .login-container {
   display: flex;
   justify-content: center;
@@ -224,7 +321,7 @@ button[type="submit"]:hover:not(:disabled) {
   margin-bottom: 1rem;
 }
 
-/* 사용자 정보 */
+/* ===== 사용자 정보 바 ===== */
 .user-info {
   display: flex;
   justify-content: flex-end;
@@ -249,7 +346,7 @@ button[type="submit"]:hover:not(:disabled) {
   background: #dc2626;
 }
 
-/* 공정률 프로그레스 바 */
+/* ===== 공정률 프로그레스 바 ===== */
 .progress-section {
   display: flex;
   align-items: center;
@@ -279,110 +376,7 @@ button[type="submit"]:hover:not(:disabled) {
   transition: width 0.3s ease;
 }
 
-/* 확정 버튼 */
-.confirm-btn {
-  background-color: #f59e0b !important;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.confirm-btn:disabled {
-  background-color: #9ca3af !important;
-  cursor: not-allowed;
-}
-
-.confirm-btn:hover:not(:disabled) {
-  background-color: #d97706 !important;
-}
-
-.confirm-btn.confirmed {
-  background-color: #22c55e !important;
-}
-
-.confirm-btn.confirmed:hover:not(:disabled) {
-  background-color: #16a34a !important;
-}
-
-/* 드래그앤드롭 이미지 업로드 */
-.dropzone {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 1rem;
-  background: #fafafa;
-}
-
-.dropzone:hover {
-  border-color: #3b82f6;
-  background: #f0f7ff;
-}
-
-.dropzone.dragging {
-  border-color: #3b82f6;
-  background: #e0f0ff;
-  border-style: solid;
-}
-
-.dropzone-text {
-  color: #666;
-  font-size: 0.95rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.file-limit {
-  font-size: 0.8rem;
-  color: #9ca3af;
-}
-
-.dropzone .image-preview {
-  position: relative;
-}
-
-.dropzone .image-preview img {
-  max-width: 100%;
-  max-height: 500px;
-  border-radius: 4px;
-  margin: 0;
-}
-
-.dropzone.sub-dropzone .image-preview img {
-  max-height: 125px;
-}
-
-.dropzone.sub-dropzone {
-  padding: 1rem;
-}
-
-.dropzone.sub-dropzone .dropzone-text {
-  font-size: 0.85rem;
-}
-
-.remove-image {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.remove-image:hover {
-  background: #dc2626;
-}
-
-/* 챕터 및 단어 조회 */
+/* ===== TotalViewer 전체 보기 ===== */
 .total-viewer {
   max-width: 800px;
   margin: auto;
@@ -394,86 +388,6 @@ button[type="submit"]:hover:not(:disabled) {
   margin-bottom: 1.5rem;
 }
 
-.chapters-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.chapter-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.chapter-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: #f9fafb;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.chapter-header:hover {
-  background: #f3f4f6;
-}
-
-.chapter-toggle {
-  color: #6b7280;
-  font-size: 0.75rem;
-}
-
-.chapter-title {
-  font-weight: 600;
-  flex: 1;
-}
-
-.chapter-count {
-  color: #6b7280;
-  font-size: 0.85rem;
-}
-
-.pages-list {
-  border-top: 1px solid #e5e7eb;
-  background: white;
-}
-
-.page-item {
-  padding: 1rem;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.page-item:last-child {
-  border-bottom: none;
-}
-
-.page-title {
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.page-content {
-  color: #374151;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  white-space: pre-wrap;
-}
-
-.page-memo {
-  color: #6b7280;
-  font-size: 0.85rem;
-  font-style: italic;
-}
-
-.no-pages {
-  padding: 1rem;
-  color: #9ca3af;
-  text-align: center;
-}
-
-/* 전체 보기 헤더 */
 .total-header-row {
   display: flex;
   justify-content: center;
@@ -482,7 +396,6 @@ button[type="submit"]:hover:not(:disabled) {
   margin-bottom: 1rem;
 }
 
-/* 전체 보기 요약 */
 .total-summary {
   text-align: center;
   color: #6b7280;
@@ -512,26 +425,46 @@ button[type="submit"]:hover:not(:disabled) {
   cursor: not-allowed;
 }
 
-/* 테이블 컨테이너 */
+/* ===== 테이블 (TotalViewer 피벗 테이블) ===== */
 .table-container {
   overflow-x: auto;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
 
-/* 단어 테이블 스타일 */
 .pages-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
 
-.pages-table.full-table {
-  min-width: 700px;
-}
-
 .pages-table.pivot-table {
   min-width: auto;
+}
+
+.pages-table th,
+.pages-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pages-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.pages-table tbody tr:hover {
+  background: #f0f7ff;
+}
+
+.pages-table .col-no {
+  width: 50px;
+  text-align: center;
 }
 
 .pages-table .col-chapter-header {
@@ -554,6 +487,7 @@ button[type="submit"]:hover:not(:disabled) {
   min-width: 100px;
 }
 
+/* ===== 단어 셀 (WordCell) ===== */
 .word-cell {
   display: flex;
   align-items: center;
@@ -561,26 +495,6 @@ button[type="submit"]:hover:not(:disabled) {
   gap: 6px;
 }
 
-.word-delete-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  width: 20px;
-  height: 20px;
-  font-size: 12px;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  padding: 0;
-  line-height: 1;
-}
-
-.word-delete-btn:hover {
-  opacity: 1;
-}
-
-/* 드래그 앤 드롭 스타일 */
 .word-cell.draggable {
   cursor: grab;
 }
@@ -605,6 +519,26 @@ button[type="submit"]:hover:not(:disabled) {
   outline: 2px dashed #3b82f6;
 }
 
+.word-delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.word-delete-btn:hover {
+  opacity: 1;
+}
+
+/* 단어 추가 버튼/입력 */
 .word-add-btn {
   background: #e5e7eb;
   color: #6b7280;
@@ -637,56 +571,6 @@ button[type="submit"]:hover:not(:disabled) {
   outline: none;
   box-sizing: border-box;
   text-align: center;
-}
-
-.pages-table th,
-.pages-table td {
-  border: 1px solid #e5e7eb;
-  padding: 0.75rem;
-  text-align: left;
-  vertical-align: top;
-}
-
-.pages-table th {
-  background: #f3f4f6;
-  font-weight: 600;
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-}
-
-.pages-table tbody tr:hover {
-  background: #f0f7ff;
-}
-
-.pages-table .col-no {
-  width: 50px;
-  text-align: center;
-}
-
-.pages-table .col-chapter {
-  width: 120px;
-  font-weight: 500;
-  color: #3b82f6;
-}
-
-.pages-table .col-title {
-  width: 100px;
-  font-weight: 500;
-}
-
-.pages-table .col-content {
-  min-width: 200px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.pages-table .col-memo {
-  min-width: 150px;
-  color: #6b7280;
-  font-style: italic;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 /* ===== 모바일 반응형 (max-width: 640px) ===== */
@@ -815,7 +699,7 @@ button[type="submit"]:hover:not(:disabled) {
     font-size: 1.2rem;
   }
 
-  /* === TotalViewer === */
+  /* TotalViewer */
   .total-viewer {
     padding: 0.5rem;
   }

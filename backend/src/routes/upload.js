@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const path = require("path");
+const { authenticateJWT } = require("../middleware/auth");
 const router = express.Router();
 
 // S3 클라이언트 설정
@@ -29,8 +30,8 @@ const upload = multer({
   },
 });
 
-// S3 업로드 엔드포인트
-router.post("/", upload.single("file"), async (req, res) => {
+// S3 업로드 엔드포인트 (인증 필요)
+router.post("/", authenticateJWT, upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "파일이 없습니다" });
   }

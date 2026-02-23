@@ -1,53 +1,60 @@
-// backend/src/index.js
+// backend/src/server.js
 const express = require("express");
 const cors = require("cors");
-const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const path = require("path");
 
 // 환경에 따라 .env 파일 선택
 const envFile = process.env.NODE_ENV === "production" ? ".env" : ".env.local";
 const envPath = path.resolve(__dirname, "..", envFile);
-console.log(`📁 NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`📁 Loading env from: ${envPath}`);
 require("dotenv").config({ path: envPath, override: true });
 
+const prisma = require("./lib/prisma");
+const errorHandler = require("./middleware/errorHandler");
+
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
+
+// CORS origin 설정 (환경변수 또는 기본값)
+const DEFAULT_ORIGINS = ["http://localhost:5173", "http://54.180.188.8:9000", "https://theonebook.me"];
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+  : DEFAULT_ORIGINS;
 
 // 미들웨어
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ["http://localhost:5173", "http://54.180.188.8:9000", "https://theonebook.me"],
+  origin: corsOrigins,
   credentials: true
 }));
 
 // 라우트 임포트
 const authRoutes = require("./routes/auth");
 const chapterRoutes = require("./routes/chapters");
-const pageRoutes = require("./routes/pages"); // ✅ 새로 추가
-const uploadRoutes = require("./routes/upload"); // ✅ 파일 업로드 라우트
-const pdfRoutes = require("./routes/pdf"); // ✅ PDF 내보내기 라우트
+const pageRoutes = require("./routes/pages");
+const uploadRoutes = require("./routes/upload");
+const pdfRoutes = require("./routes/pdf");
 
 // 라우트 등록
 app.use("/api/auth", authRoutes);
 app.use("/api/chapters", chapterRoutes);
-app.use("/api/pages", pageRoutes); // ✅ 페이지 API 등록
-app.use("/api/upload", uploadRoutes); // ✅ 파일 업로드 API 등록
-app.use("/api/pdf", pdfRoutes); // ✅ PDF 내보내기 API 등록
+app.use("/api/pages", pageRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/pdf", pdfRoutes);
 
 // 정적 파일 경로 설정 (이미지 접근 가능하게)
 app.use("/uploads", express.static("uploads"));
-
 
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("더 원 책 작성 API 서버");
 });
 
-// ✅ 데이터베이스 초기화 함수 - 기본 사용자 및 챕터 등록
+// 글로벌 에러 핸들러 (라우트 등록 이후에 배치)
+app.use(errorHandler);
+
+// 데이터베이스 초기화 함수 - 기본 사용자 및 챕터 등록
 async function initializeDatabase() {
   try {
     // 사용자 생성
@@ -62,7 +69,7 @@ async function initializeDatabase() {
         ],
         skipDuplicates: true,
       });
-      console.log("✅ 기본 사용자 생성 완료");
+      console.log("기본 사용자 생성 완료");
     }
 
     // 챕터 생성
@@ -83,18 +90,18 @@ async function initializeDatabase() {
         { title: "맺음말", order: 12 },
       ];
       await prisma.chapter.createMany({ data: chapters, skipDuplicates: true });
-      console.log("✅ 기본 챕터 생성 완료");
+      console.log("기본 챕터 생성 완료");
     }
   } catch (error) {
-    console.error("❌ 데이터베이스 초기화 오류:", error);
+    console.error("데이터베이스 초기화 오류:", error);
   }
 }
 
 // 서버 시작 전 초기화
 initializeDatabase().then(() => {
-  const HOST = process.env.HOST || "localhost"; // 🔄 동적 호스트 설정
+  const HOST = process.env.HOST || "localhost";
   app.listen(PORT, () => {
-    console.log(`🚀 서버 실행 중: http://${HOST}:${PORT}`);
+    console.log(`서버 실행 중: http://${HOST}:${PORT}`);
   });
 });
 

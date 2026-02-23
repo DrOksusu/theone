@@ -1,12 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../lib/prisma");
+const { authenticateJWT } = require("../middleware/auth");
 
-/**
- * 📘 모든 챕터 조회 (order 순으로)
- * GET /api/chapters
- */
+// 모든 챕터 조회 (order 순으로)
 router.get("/", async (req, res) => {
   try {
     const chapters = await prisma.chapter.findMany({
@@ -19,10 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-/**
- * 📘 특정 챕터 조회
- * GET /api/chapters/:id
- */
+// 특정 챕터 조회
 router.get("/:id", async (req, res) => {
   try {
     const chapter = await prisma.chapter.findUnique({
@@ -35,12 +29,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-/**
- * ➕ 챕터 생성
- * POST /api/chapters
- * { "title": "제목", "order": 1 }
- */
-router.post("/", async (req, res) => {
+// 챕터 생성 (인증 필요)
+router.post("/", authenticateJWT, async (req, res) => {
   try {
     const { title, order } = req.body;
     const newChapter = await prisma.chapter.create({
@@ -55,12 +45,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-/**
- * ✏️ 챕터 수정
- * PUT /api/chapters/:id
- * { "title": "수정된 제목", "order": 2 }
- */
-router.put("/:id", async (req, res) => {
+// 챕터 수정 (인증 필요)
+router.put("/:id", authenticateJWT, async (req, res) => {
   try {
     const { title, order } = req.body;
     const updated = await prisma.chapter.update({
@@ -76,11 +62,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-/**
- * ❌ 챕터 삭제
- * DELETE /api/chapters/:id
- */
-router.delete("/:id", async (req, res) => {
+// 챕터 삭제 (인증 필요)
+router.delete("/:id", authenticateJWT, async (req, res) => {
   try {
     await prisma.chapter.delete({
       where: { id: parseInt(req.params.id) },
@@ -91,7 +74,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// 📘 1. 특정 챕터의 페이지 리스트 조회
+// 특정 챕터의 페이지 리스트 조회
 router.get("/:id/pages", async (req, res) => {
   const chapterId = parseInt(req.params.id);
 
@@ -108,7 +91,7 @@ router.get("/:id/pages", async (req, res) => {
 
     res.json(pages);
   } catch (error) {
-    console.error("🔴 페이지 목록 조회 실패:", error);
+    console.error("페이지 목록 조회 실패:", error);
     res.status(500).json({ error: "서버 오류" });
   }
 });

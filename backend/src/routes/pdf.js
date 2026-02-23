@@ -1,13 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 const PDFDocument = require("pdfkit");
 const https = require("https");
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
-
-const prisma = new PrismaClient();
+const prisma = require("../lib/prisma");
 
 // 한글 폰트 경로 (NanumGothic 사용)
 const FONT_PATH = path.join(__dirname, "..", "..", "fonts", "NanumGothic.ttf");

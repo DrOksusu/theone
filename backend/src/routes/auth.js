@@ -1,11 +1,10 @@
 // backend/src/routes/auth.js
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const prisma = require("../lib/prisma");
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // 로그인
 router.post("/login", async (req, res) => {

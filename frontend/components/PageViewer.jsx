@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, useContext } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
 import { useAuth } from '@/components/AuthProvider';
+import ImageDropzone from '@/components/ImageDropzone';
+import ChapterPageSelector from '@/components/ChapterPageSelector';
+import PageNavigation from '@/components/PageNavigation';
 
 export default function PageViewer({ token, userId, lastChapterId, lastPageId }) {
   const { refreshStats } = useAuth();
@@ -25,11 +28,8 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
   const [previewUrl, setPreviewUrl] = useState('');
   const [subPreviewUrl, setSubPreviewUrl] = useState('');
   const [pageInfo, setPageInfo] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isSubDragging, setIsSubDragging] = useState(false);
-  const fileInputRef = useRef(null);
-  const subFileInputRef = useRef(null);
 
+  // 챕터 목록 로드
   useEffect(() => {
     axios.get('/api/chapters').then((res) => {
       if (Array.isArray(res.data)) {
@@ -39,12 +39,13 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           setForm((prev) => ({ ...prev, chapterId: lastChapterId.toString() }));
         }
       } else {
-        console.error('📛 chapters 응답이 배열이 아님:', res.data);
+        console.error('chapters 응답이 배열이 아님:', res.data);
         setChapters([]);
       }
     });
   }, []);
 
+  // 선택된 챕터의 페이지 목록 로드
   useEffect(() => {
     if (selectedChapterId) {
       axios
@@ -68,6 +69,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     }
   }, [selectedChapterId, token]);
 
+  // 선택된 페이지 상세 로드
   useEffect(() => {
     if (!selectedPageId) {
       resetForm();
@@ -75,14 +77,14 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     }
     if (selectedPageId.startsWith('_new_')) return;
 
-    console.log('📡 페이지 조회 요청:', selectedPageId);
+    console.log('페이지 조회 요청:', selectedPageId);
 
     axios
       .get(`/api/pages/${selectedPageId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       .then((res) => {
-        console.log('✅ 페이지 조회 성공:', res.data);
+        console.log('페이지 조회 성공:', res.data);
         const page = res.data;
         setForm({
           title: page.title,
@@ -105,7 +107,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
         });
       })
       .catch((err) => {
-        console.error('❌ 페이지 조회 실패:', err);
+        console.error('페이지 조회 실패:', err);
         alert('페이지 조회 중 오류가 발생했습니다.');
       });
   }, [selectedPageId, selectedChapterId, token]);
@@ -143,105 +145,82 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     setForm({ ...form, [name]: value });
   };
 
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+  // 챕터 변경 핸들러
+  const handleChapterChange = (value) => {
+    setSelectedChapterId(value);
+    setForm((prev) => ({ ...prev, chapterId: value }));
+    saveLastPosition(value, '');
+  };
 
-  const handleFile = (file) => {
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('❌ 이미지 파일만 업로드 가능합니다.');
-      return;
+  // 페이지(단어) 변경 핸들러
+  const handlePageChange = (value) => {
+    if (value === 'add_new') {
+      const newTitle = prompt('새로운 단어(타이틀)를 입력해주세요:');
+      if (!newTitle || newTitle.trim() === '') {
+        alert('단어 제목을 입력해주세요!');
+        return;
+      }
+      const trimmedTitle = newTitle.trim();
+      const newId = `_new_${Date.now()}`;
+      setPages((prev) => [
+        ...prev,
+        { id: newId, title: trimmedTitle, order: 0 },
+      ]);
+      setForm({
+        title: trimmedTitle,
+        content: '',
+        memo: '',
+        chapterId: selectedChapterId,
+        image: null,
+        imageUrl: '',
+        subImage: null,
+        subImageUrl: '',
+      });
+      setPreviewUrl('');
+      setSubPreviewUrl('');
+      setSelectedPageId(newId);
+    } else {
+      console.log('단어 선택됨:', value);
+      setSelectedPageId(value);
+      saveLastPosition(selectedChapterId, value);
     }
+  };
 
-    if (file.size > MAX_FILE_SIZE) {
-      alert(`❌ 파일 용량이 너무 큽니다.\n최대 20MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-      return;
-    }
+  // 네비게이션 핸들러
+  const handleNavigate = (newId) => {
+    setSelectedPageId(newId);
+    saveLastPosition(selectedChapterId, newId);
+  };
 
+  // 메인 이미지 파일 선택 핸들러
+  const handleMainFileChange = (file) => {
     setForm((prev) => ({ ...prev, image: file }));
     const reader = new FileReader();
     reader.onloadend = () => setPreviewUrl(reader.result);
     reader.readAsDataURL(file);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleFile(file);
-    } else {
-      setForm((prev) => ({ ...prev, image: null }));
-      setPreviewUrl(form.imageUrl || '');
-    }
+  // 메인 이미지 제거 핸들러
+  const handleMainFileRemove = () => {
+    setForm((prev) => ({ ...prev, image: null, imageUrl: '' }));
+    setPreviewUrl('');
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
-    }
-  };
-
-  // 보조 이미지 핸들러
-  const handleSubFile = (file) => {
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('❌ 이미지 파일만 업로드 가능합니다.');
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      alert(`❌ 파일 용량이 너무 큽니다.\n최대 20MB까지 업로드 가능합니다.\n현재 파일: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-      return;
-    }
-
+  // 보조 이미지 파일 선택 핸들러
+  const handleSubFileChange = (file) => {
     setForm((prev) => ({ ...prev, subImage: file }));
     const reader = new FileReader();
     reader.onloadend = () => setSubPreviewUrl(reader.result);
     reader.readAsDataURL(file);
   };
 
-  const handleSubFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleSubFile(file);
-    } else {
-      setForm((prev) => ({ ...prev, subImage: null }));
-      setSubPreviewUrl(form.subImageUrl || '');
-    }
+  // 보조 이미지 제거 핸들러
+  const handleSubFileRemove = () => {
+    setForm((prev) => ({ ...prev, subImage: null, subImageUrl: '' }));
+    setSubPreviewUrl('');
   };
 
-  const handleSubDragOver = (e) => {
-    e.preventDefault();
-    setIsSubDragging(true);
-  };
-
-  const handleSubDragLeave = (e) => {
-    e.preventDefault();
-    setIsSubDragging(false);
-  };
-
-  const handleSubDrop = (e) => {
-    e.preventDefault();
-    setIsSubDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleSubFile(file);
-    }
-  };
-
+  // 페이지 저장 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.chapterId) {
@@ -304,38 +283,78 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           await axios.put(`/api/pages/${existingPage.id}`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          alert('✅ 기존 페이지를 성공적으로 수정했습니다!');
+          alert('기존 페이지를 성공적으로 수정했습니다!');
 
-          // 수정 후 페이지 목록 갱신
           const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setPages(pagesRes.data);
         } else {
-          alert('❗ 같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
+          alert('같은 단어가 이미 있습니다, 페이지조회를 눌러서 수정하세요');
           return;
         }
       } else {
-        console.log('📤 새 페이지 생성 요청...');
+        console.log('새 페이지 생성 요청...');
         const newPageRes = await axios.post('/api/pages', payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('✅ 새 페이지 생성 완료:', newPageRes.data);
-        alert('✅ 새 페이지를 성공적으로 생성했습니다!');
+        console.log('새 페이지 생성 완료:', newPageRes.data);
+        alert('새 페이지를 성공적으로 생성했습니다!');
 
-        // 저장 성공 후 페이지 목록 갱신
-        console.log('🔄 페이지 목록 갱신 중...');
+        console.log('페이지 목록 갱신 중...');
         const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('📋 갱신된 페이지 목록:', pagesRes.data);
+        console.log('갱신된 페이지 목록:', pagesRes.data);
         setPages(pagesRes.data);
         setSelectedPageId(newPageRes.data.id.toString());
-        console.log('✅ 목록 갱신 완료');
+        console.log('목록 갱신 완료');
       }
     } catch (error) {
-      console.error('❌ 저장 중 오류:', error);
+      console.error('저장 중 오류:', error);
       alert('저장 중 문제가 발생했습니다!');
+    }
+  };
+
+  // 확정 토글 핸들러
+  const handleConfirmToggle = async () => {
+    try {
+      const res = await axios.put(`/api/pages/${selectedPageId}/confirm`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setConfirmed(res.data.confirmed);
+      if (refreshStats) refreshStats();
+    } catch (error) {
+      console.error('확정 토글 실패:', error);
+      alert('확정 상태 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 페이지 삭제 핸들러
+  const handleDelete = async () => {
+    if (!selectedPageId || selectedPageId.startsWith('_new_')) return;
+
+    const confirmDelete = window.confirm(
+      `"${form.title}" 단어를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/pages/${selectedPageId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('단어가 삭제되었습니다.');
+
+      const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPages(pagesRes.data);
+      setSelectedPageId('');
+      resetForm();
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      alert('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -343,204 +362,38 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
     <form onSubmit={handleSubmit} className="page-form">
       <h2>📖 단어 조회 & 수정 & 추가 & 삭제</h2>
 
-      <div className="form-row">
-        <select
-          value={selectedChapterId}
-          onChange={(e) => {
-            const value = e.target.value;
-            setSelectedChapterId(value);
-            setForm((prev) => ({ ...prev, chapterId: value }));
-            saveLastPosition(value, '');
-          }}
-        >
-          <option value="">챕터 선택</option>
-          {chapters.map((ch) => (
-            <option key={ch.id} value={ch.id}>
-              {ch.order}. {ch.title}
-            </option>
-          ))}
-        </select>
+      <ChapterPageSelector
+        chapters={chapters}
+        pages={pages}
+        selectedChapterId={selectedChapterId}
+        selectedPageId={selectedPageId}
+        onChapterChange={handleChapterChange}
+        onPageChange={handlePageChange}
+      />
 
-        <select
-          value={selectedPageId}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value === 'add_new') {
-              const newTitle = prompt('새로운 단어(타이틀)를 입력해주세요:');
-              if (!newTitle || newTitle.trim() === '') {
-                alert('❗ 단어 제목을 입력해주세요!');
-                return;
-              }
-              const trimmedTitle = newTitle.trim();
-              const newId = `_new_${Date.now()}`;
-              setPages((prev) => [
-                ...prev,
-                { id: newId, title: trimmedTitle, order: 0 },
-              ]);
-              setForm({
-                title: trimmedTitle,
-                content: '',
-                memo: '',
-                chapterId: selectedChapterId,
-                image: null,
-                imageUrl: '',
-                subImage: null,
-                subImageUrl: '',
-              });
-              setPreviewUrl('');
-              setSubPreviewUrl('');
-              if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-              }
-              if (subFileInputRef.current) {
-                subFileInputRef.current.value = '';
-              }
-              setSelectedPageId(newId);
-            } else {
-              console.log('🔄 단어 선택됨:', value);
-              setSelectedPageId(value);
-              saveLastPosition(selectedChapterId, value);
-            }
-          }}
-        >
-          <option value="">단어 선택</option>
-          {pages.map((page, idx) => {
-            const chapterIdx = chapters.findIndex((ch) => ch.id.toString() === selectedChapterId);
-            const globalOffset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch._count?.pages || 0), 0);
-            return (
-              <option key={page.id} value={page.id}>
-                {globalOffset + idx + 1}. {page.title}
-              </option>
-            );
-          })}
-          <option value="add_new">➕ 단어 추가</option>
-        </select>
-      </div>
+      <PageNavigation
+        pages={pages}
+        selectedPageId={selectedPageId}
+        chapters={chapters}
+        selectedChapterId={selectedChapterId}
+        onNavigate={handleNavigate}
+      />
 
-      {pages.length > 0 && (() => {
-        const currentIdx = pages.findIndex((p) => p.id.toString() === selectedPageId);
-        return (
-          <div className="page-nav">
-            <button
-              type="button"
-              className="page-nav-btn"
-              disabled={currentIdx <= 0}
-              onClick={() => {
-                if (currentIdx > 0) {
-                  const newId = pages[currentIdx - 1].id.toString();
-                  setSelectedPageId(newId);
-                  saveLastPosition(selectedChapterId, newId);
-                }
-              }}
-            >
-              ←
-            </button>
-            <span className="page-nav-info">
-              {(() => {
-                const chapterIdx = chapters.findIndex((ch) => ch.id.toString() === selectedChapterId);
-                const globalOffset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch._count?.pages || 0), 0);
-                const globalPageNum = currentIdx >= 0 ? globalOffset + currentIdx + 1 : '-';
-                return `p.${globalPageNum} (${currentIdx >= 0 ? currentIdx + 1 : '-'}/${pages.length})`;
-              })()}
-            </span>
-            <button
-              type="button"
-              className="page-nav-btn"
-              disabled={currentIdx >= pages.length - 1}
-              onClick={() => {
-                let newId;
-                if (currentIdx < 0) {
-                  newId = pages[0].id.toString();
-                } else if (currentIdx < pages.length - 1) {
-                  newId = pages[currentIdx + 1].id.toString();
-                }
-                if (newId) {
-                  setSelectedPageId(newId);
-                  saveLastPosition(selectedChapterId, newId);
-                }
-              }}
-            >
-              →
-            </button>
-          </div>
-        );
-      })()}
+      <ImageDropzone
+        previewUrl={previewUrl}
+        onFileChange={handleMainFileChange}
+        onRemove={handleMainFileRemove}
+        label="메인 이미지"
+        maxSize={20}
+      />
 
-      <div
-        className={`dropzone ${isDragging ? 'dragging' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          style={{ display: 'none' }}
-        />
-        {previewUrl ? (
-          <div className="image-preview">
-            <img src={previewUrl} alt="미리보기" />
-            <button
-              type="button"
-              className="remove-image"
-              onClick={(e) => {
-                e.stopPropagation();
-                setForm((prev) => ({ ...prev, image: null, imageUrl: '' }));
-                setPreviewUrl('');
-                if (fileInputRef.current) fileInputRef.current.value = '';
-              }}
-            >
-              ✕ 이미지 삭제
-            </button>
-          </div>
-        ) : (
-          <div className="dropzone-text">
-            <span>📷 메인 이미지를 드래그하거나 클릭하여 선택</span>
-            <span className="file-limit">(최대 20MB)</span>
-          </div>
-        )}
-      </div>
-
-      <div
-        className={`dropzone sub-dropzone ${isSubDragging ? 'dragging' : ''}`}
-        onDragOver={handleSubDragOver}
-        onDragLeave={handleSubDragLeave}
-        onDrop={handleSubDrop}
-        onClick={() => subFileInputRef.current?.click()}
-      >
-        <input
-          type="file"
-          ref={subFileInputRef}
-          onChange={handleSubFileChange}
-          accept="image/*"
-          style={{ display: 'none' }}
-        />
-        {subPreviewUrl ? (
-          <div className="image-preview">
-            <img src={subPreviewUrl} alt="보조 이미지 미리보기" />
-            <button
-              type="button"
-              className="remove-image"
-              onClick={(e) => {
-                e.stopPropagation();
-                setForm((prev) => ({ ...prev, subImage: null, subImageUrl: '' }));
-                setSubPreviewUrl('');
-                if (subFileInputRef.current) subFileInputRef.current.value = '';
-              }}
-            >
-              ✕ 보조 이미지 삭제
-            </button>
-          </div>
-        ) : (
-          <div className="dropzone-text">
-            <span>📷 보조 이미지를 드래그하거나 클릭하여 선택</span>
-            <span className="file-limit">(최대 20MB)</span>
-          </div>
-        )}
-      </div>
+      <ImageDropzone
+        previewUrl={subPreviewUrl}
+        onFileChange={handleSubFileChange}
+        onRemove={handleSubFileRemove}
+        label="보조 이미지"
+        maxSize={20}
+      />
 
       <textarea
         name="content"
@@ -566,18 +419,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           type="button"
           className={confirmed ? 'confirm-btn confirmed' : 'confirm-btn'}
           disabled={!selectedPageId || selectedPageId.startsWith('_new_')}
-          onClick={async () => {
-            try {
-              const res = await axios.put(`/api/pages/${selectedPageId}/confirm`, {}, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              setConfirmed(res.data.confirmed);
-              if (refreshStats) refreshStats();
-            } catch (error) {
-              console.error('확정 토글 실패:', error);
-              alert('확정 상태 변경 중 오류가 발생했습니다.');
-            }
-          }}
+          onClick={handleConfirmToggle}
         >
           {confirmed ? '확정취소' : '확정하기'}
         </button>
@@ -585,33 +427,7 @@ export default function PageViewer({ token, userId, lastChapterId, lastPageId })
           type="button"
           className="delete-btn"
           disabled={!selectedPageId || selectedPageId.startsWith('_new_')}
-          onClick={async () => {
-            if (!selectedPageId || selectedPageId.startsWith('_new_')) return;
-
-            const confirmDelete = window.confirm(
-              `"${form.title}" 단어를 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
-            );
-
-            if (!confirmDelete) return;
-
-            try {
-              await axios.delete(`/api/pages/${selectedPageId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              alert('✅ 단어가 삭제되었습니다.');
-
-              // 목록 갱신
-              const pagesRes = await axios.get(`/api/chapters/${selectedChapterId}/pages`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              setPages(pagesRes.data);
-              setSelectedPageId('');
-              resetForm();
-            } catch (error) {
-              console.error('❌ 삭제 실패:', error);
-              alert('삭제 중 오류가 발생했습니다.');
-            }
-          }}
+          onClick={handleDelete}
         >
           삭제하기
         </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import axios from '@/lib/axios';
+import WordCell from '@/components/WordCell';
 
 export default function TotalViewer({ token, userId }) {
   const [chapters, setChapters] = useState([]);
@@ -52,10 +53,10 @@ export default function TotalViewer({ token, userId }) {
       await axios.delete(`/api/pages/${pageId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      alert('✅ 단어가 삭제되었습니다.');
+      alert('단어가 삭제되었습니다.');
       fetchChaptersWithPages();
     } catch (error) {
-      console.error('❌ 삭제 실패:', error);
+      console.error('삭제 실패:', error);
       alert('삭제 중 오류가 발생했습니다.');
     }
   };
@@ -138,7 +139,7 @@ export default function TotalViewer({ token, userId }) {
       }
 
     } catch (error) {
-      console.error('❌ 순서 변경 실패:', error);
+      console.error('순서 변경 실패:', error);
       alert('순서 변경 중 오류가 발생했습니다.');
       fetchChaptersWithPages();
     }
@@ -189,7 +190,7 @@ export default function TotalViewer({ token, userId }) {
       setAddingTitle('');
       fetchChaptersWithPages();
     } catch (error) {
-      console.error('❌ 단어 추가 실패:', error);
+      console.error('단어 추가 실패:', error);
       alert('단어 추가 중 오류가 발생했습니다.');
     }
     cancelAdding();
@@ -279,26 +280,16 @@ export default function TotalViewer({ token, userId }) {
                       onDrop={(e) => handleDrop(e, chapter.id, rowIndex)}
                     >
                       {page ? (
-                        <div
-                          className={`word-cell draggable ${draggedItem?.page.id === page.id ? 'dragging' : ''}`}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, page, chapter.id)}
+                        <WordCell
+                          page={page}
+                          chapterId={chapter.id}
+                          chapters={chapters}
+                          rowIndex={rowIndex}
+                          onDragStart={handleDragStart}
                           onDragEnd={handleDragEnd}
-                        >
-                          <span className="drag-handle">⋮⋮</span>
-                          <span>{(() => {
-                            const chapterIdx = chapters.findIndex((ch) => ch.id === chapter.id);
-                            const offset = chapters.slice(0, chapterIdx).reduce((sum, ch) => sum + (ch.pages?.length || 0), 0);
-                            return `${offset + rowIndex + 1}. ${page.title}`;
-                          })()}</span>
-                          <button
-                            className="word-delete-btn"
-                            onClick={() => handleDelete(page.id, page.title)}
-                            title="삭제"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                          onDelete={handleDelete}
+                          isDragging={draggedItem?.page.id === page.id}
+                        />
                       ) : rowIndex === (chapter.pages?.length || 0) ? (
                         addingChapterId === chapter.id ? (
                           <input
