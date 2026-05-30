@@ -46,6 +46,11 @@ app.use("/api/pdf", pdfRoutes);
 // 정적 파일 경로 설정 (이미지 접근 가능하게)
 app.use("/uploads", express.static("uploads"));
 
+// 헬스체크
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // 기본 라우트
 app.get("/", (req, res) => {
   res.send("더 원 책 작성 API 서버");
